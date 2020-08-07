@@ -50,10 +50,19 @@
 \frontmatter
 %\usechapterimagefalse % If you don't want to include a chapter image, use this to toggle images off - it can be enabled later with \usechapterimagetrue
 
-
+\chapterimage{/chapter-image/modele-chapter-01.png}
 \chapter*{Abstract}
 \vspace{-2cm}
-\lipsum[2-4]
+L'Insee dispose d'une plateforme permettant aux développeurs de réaliser des tâches d'intégration continue et aux statisticiens de déployer des services à la demande. Cette plateforme repose actuellement sur une architecture dite conteneurisée.\\
+
+Ce rapport visera tout d'abord à présenter l'intérêt d'un tel système pour ce type de besoin. Par la suite nous nous focaliseront sur deux solutions d'orchestration de conteneurs : Mesos/Marathon puisque c'est la solution déjà en place à l'Insee, et Kubernetes le nouveau leader mondial dans ce domaine. Le but étant de pouvoir à la fin faire un choix entre l'une ou l'autre des solutions.\\
+
+Pour cela, Nous aborderons leur fonctionnement ainsi que comment y déployer une application. Ce sera l'occasion de découvrir deux gestionnaires de paquets adapté pour ces systèmes.\\
+
+Nous étudierons les diverses possibilités offerte par les deux systèmes dans le cadre de l'intégration continue. Cela nous amènera à présenter la notion de GitOps. Nous présenterons notamment Argo un outil performant dans la mise en place de tel processus.\\
+
+Enfin, la plateforme repose sur une application "maison" Onyxia permettant de déployer des services à la demande. Une dernière partie s'intéressera donc à la mise en place de Kubernetes sur cette application. Ce sera l'occasion de comparer ce que l'un ou l'autre des orchestrateurs propose afin de simplifier la mise en place d' un tel service.
+
 
 
 \chapterimage{chapter-image/intro-01.png} % Table of contents heading image
@@ -66,8 +75,7 @@ Je tiens également à remercier Frédéric Comte et Olivier Levitt qui m’ont 
 
 Ce stage ayant été mené en parallèle de mon poste à l’Insee, je remercie l'ensemble des personnes avec lesquelles j'ai travaillé au cours de ces 6 derniers mois, pour m'avoir laissé du temps pour la réalisation de ce stage.\newline
 
-%Je tiens également à remercier Laurence Blanc-Garin ainsi que Pierre Léostic qui m’ont
-%donnés des conseils pour la rédaction de ce mémoire. 
+Je tiens également à remercier Laurence Blanc-Garin ainsi que Pierre Léostic pour leur relecture attentive et leurs conseils pour la rédaction de ce mémoire. 
 
 
 
@@ -125,6 +133,8 @@ Par ailleurs, la Diit a également développé une application appelée Onyxia. 
 \caption[]{Schéma simplifié de l'architecture de l'écosystème Onyxia \newline}
 \end{figure}
 
+
+\section{Objectif et problématique du stage}
 Une architecture de type conteneur n'est pas un standard à l'Insee, l'infrastructure de production étant uniquement basée sur des VMs (Virtual Machine ou Machine Virtuelle). L'objectif de mon stage sera donc d'étudier \textbf{les intérêts de la mise en place d'une architecture conteneurisée pour de l'intégration continue ou du service en self-déploiement.}\\
 
 Tout d'abord, nous étudierons les différences entre VM et conteneur afin de comprendre en quoi une architecture conteneurisée peut être un atout. Par la suite, nous verrons qu'une telle architecture se doit de reposer sur un orchestrateur de conteneur. Ce qui nous amènera à faire la comparaison des deux orchestrateurs de conteneurs les plus utilisés actuellement : Marathon (solution utilisée pour la plateforme de l'innovation) et Kubernetes. Pour cela, nous nous appuierons notamment sur ce que les deux orchestrateurs peuvent proposer dans le cadre de l'intégration-continue, de services en self-déploiement, ainsi qu'en terme d'aide au développement et de sécurité.
@@ -593,7 +603,7 @@ Par ailleurs, GitLab propose également une intégration avec des clusters Kuber
 Flux est l’outil de CD de Weave\footnote{Un projet CNCF classé en tant que « Sandbox Project »}. Flux repose sur le modèle en pull. Il utilise un opérateur dans le cluster pour déclencher des déploiements à l'intérieur de Kubernetes. En plus de surveiller les dépôts Git, il est également capable de surveiller des dépôts d'images docker, d'y détecter les nouvelles images utilisées, et en fonction de règles définies au préalable il peut déclencher, ou non, la mise à jour des applications déployées dans le cluster.
 
 \paragraph{Argo CD}
-Comme Flux, Argo CD est un opérateur Kubernetes synchronisant l'état de l'application dans le cluster avec la description des fichiers Kubernetes stockés dans un dépôt Git. Il s’inscrit lui aussi dans le modèle en pull. Argo CD, n'est pas capable de surveiller un répertoire d'image mais dispose d'une interface et d'une CLI que le développeur peut utiliser pour créer et suivre les ressources d’Argo CD (pour plus d'informations voir sous partie suivante).
+Comme Flux, Argo CD est un opérateur Kubernetes synchronisant l'état de l'application dans le cluster avec la description des fichiers Kubernetes stockés dans un dépôt Git. Il s’inscrit lui aussi dans le modèle en pull. Argo CD, est capable de surveiller un répertoire d'image (depuis début août) mais dispose d'une interface et d'une CLI que le développeur peut utiliser pour créer et suivre les ressources d’Argo CD (pour plus d'informations voir sous partie suivante).
 
 \paragraph{Dispatch}
 Dispatch est un outil payant proposé par D2IQ (anciennement DC/OS) dans le cadre de son offre Kubernetes. Il s'appuie sur deux outils que sont Argo et Tekton. Il permet de décrire des pipelines Tekton et de générer automatiquement les configurations Argo. Il repose donc sur le modèle en pull.
@@ -662,7 +672,7 @@ Le cloud impose donc de nouvelles manières de développer tel que les microserv
 \chapterimage{/chapter-image/onyxia.png}
 \chapter{Onyxia: des services en self-déploiement}
 \vspace{-2cm}
-Afin de mettre en place un DataLab, il peut être bénéfique de posséder une plateforme permettant de déployer des services de notre choix, de se former sur ce service, de pouvoir le jeter, de recommencer, tout cela rapidement et facilement. L'utilisation d'une architecture conteneurisée semble être la solution. Kubernetes propose une application Kubeapps ( voir annexe \ref{kubeapps}) mais elle ne propose pas l'auto-configuration des services. Cette solution n'est pas compatible avec Marathon et il n'existe aucune autre solution similaire.\\
+Afin de mettre en place un DataLab, il peut être bénéfique de posséder une plateforme permettant de déployer des services de notre choix, de se former sur ce service, de pouvoir le jeter, de recommencer, tout cela rapidement et facilement. L'utilisation d'une architecture conteneurisée semble être la solution. Kubernetes propose une application Kubeapps ( voir annexe \ref{kubeapps}) mais elle ne propose pas l'auto-configuration des services. Cette solution n'est pas compatible avec Marathon pour qui il n'existe aucune autre solution similaire.\\
 
 Puisque le premier choix de l'Insee a été d'utiliser Marathon comme orchestrateur de conteneur, la Diit a développer une application, Onyxia, répondant au même besoin que kubeapps mais en rajoutant l'auto-configuration des services. Cette solution n'est  compatible qu'avec Marathon. Au cours de mon stage j'ai ajouté le support de kubernetes dans Onyxia. A partir de cette expérience, nous allons comparer ce que les deux orchestrateurs facilitent (ou pas) dans le cadre d'une utilisation pour du service à la demande.
 
@@ -850,10 +860,7 @@ Pour Helm, chaque requête sur Onyxia-api pour lister mes services résulte en f
 
 Par ailleurs, le comportement de Helm n'est pas le même que Marathon lorsqu'on stoppe un service. En effet, Marathon distingue un service arrêté d'un service supprimé, ce n'est pas le cas de Helm. Un service Helm que l'on arrêtera sera perdu (il faudra repasser par l'étape de création pour en avoir un nouveau) alors qu'un service Universe déployé dans Marathon pourra être redémarré.
 
-\section{Quel intêret pour l'Insee ? Pour la statistique publique ?}
-La migration d'Onyxia vers Kubernetes permet à l'Insee de ne plus être dépendante de DC/OS. En effet, nous sommes désormais capable de monter une deuxième plateforme de l'innovation sans ces outils. Cette migration a également permis de moderniser, de rendre open-source et rajouter des fonctionnalités à Onyxia : le support de Kubernetes, mais aussi le cloudshell \footnote{Un shell directement accessible dans Onyxia et permettant de dialoguer directement avec le cluster et/ou les différents services tels que Git, minIO, Vault.}, ou encore le multi-régions \footnote{Initialement, Onyxia ne pouvait déployer que dans un seul orchestrateur. Désormais, l'utilisateur peut déployer des applications dans plusieurs lieux (et donc différents orchestrateurs) qu'il peut choisir depuis Onyxia.}. Ces travaux permettront également d'améliorer sa disponibilité puisque plusieurs centre Insee peuvent désormais facilement déployer et héberger leur Onyxia.\\
 
-Cette migration permet également de proposer aux autres établissements du ministère des Finances une solution pour se créer un cloud spécialisé dans les outils et techniques de traitement de données, à l’état de l’art et accessible à un public varié 100\% gratuite et opensource. Cette solution a d'ailleurs été utilisé par la communauté spyrale (une communauté d'agent de l'état) qui durant la  période de confinement, ont proposé aux agents intéressés de les accompagner dans un parcours de formation. Onyxia a été la plateforme utilisée. Cette plateforme permet donc de rendre les techniques modernes plus accessibles et de mutualiser les efforts pour répondre aux défis actuels de la statistique publique.
 
 
 
@@ -878,6 +885,10 @@ Par ailleurs, Helm permet a Kubernetes de posséder un gestionnaire de paquet bi
 Enfin, dans le cadre de l'intégration continue, Kubernetes surpasse Mesos/marathon. En effet les applications actuelles orientée dev-ops, GitOps, CI/CD sont quasiment toutes orientées pour fonctionner avec Kubernetes.\newline
 
 L'ensemble des travaux réalisés ont permis de rendre Onyxia compatible avec l'orchestrateur de conteneurs Kubernetes et de le faire interagir avec plusieurs orchestrateurs en même temps, ce qui permet désormais de fournir une meilleure disponibilité de service. Enfin les travaux sur l'intégration continue ont permis de sensibiliser le public sur la nécessité de disposer d'une telle solution à l'Insee.\newline
+
+La migration d'Onyxia vers Kubernetes permet à l'Insee de ne plus être dépendante de DC/OS. En effet, nous sommes désormais capable de monter une deuxième plateforme de l'innovation sans ces outils. Cette migration a également permis de moderniser, de rendre open-source et rajouter des fonctionnalités à Onyxia : le support de Kubernetes, mais aussi le cloudshell \footnote{Un shell directement accessible dans Onyxia et permettant de dialoguer directement avec le cluster et/ou les différents services tels que Git, minIO, Vault.}, ou encore le multi-régions \footnote{Initialement, Onyxia ne pouvait déployer que dans un seul orchestrateur. Désormais, l'utilisateur peut déployer des applications dans plusieurs lieux (et donc différents orchestrateurs) qu'il peut choisir depuis Onyxia.}. Ces travaux permettront également d'améliorer sa disponibilité puisque plusieurs centre Insee peuvent désormais facilement déployer et héberger leur Onyxia.\\
+
+Cette migration permet également de proposer aux autres établissements du ministère des Finances une solution pour se créer un cloud spécialisé dans les outils et techniques de traitement de données, à l’état de l’art et accessible à un public varié 100\% gratuite et opensource. Cette solution a d'ailleurs été utilisé par la communauté spyrale (une communauté d'agent de l'état) qui durant la  période de confinement, ont proposé aux agents intéressés de les accompagner dans un parcours de formation. Onyxia a été la plateforme utilisée. Cette plateforme permet donc de rendre les techniques modernes plus accessibles et de mutualiser les efforts pour répondre aux défis actuels de la statistique publique.
 
 Par ailleurs, Il serait également intéressant de comparer ce que les deux orchestrateurs proposent pour du machine learning. En effet, Kubernetes propose des solutions telle que  kubeflow ou encore argoworkflow, alors que Marathon propose des solutions basé sur Spark, ou Hadoop ou encore TFMesos (Un scheduleur qui aide à exécuter des tâches de machine learning Tensorflow distribuées avec le support de GPU). Ces solutions pouvant être intéressante pour le SspLab\footnote{Division innovation mais orientée statistique et traitement des données}.\newline
 
@@ -1334,7 +1345,7 @@ Dans le monde de kubernetes, il existe des applications permettant de simplifier
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Graphique}
 \hspace{-1cm}
-\includegraphics[scale=0.12]{Pictures/onyxia/kubeapps.jpg}
+\includegraphics[scale=0.10]{Pictures/onyxia/kubeapps.jpg}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Aperçus de l'interface de Kubeapps \newline}
 \end{figure}
@@ -1370,7 +1381,7 @@ Cette solution n'a finalement pas été retenu, en effet faire reposer Onyxia su
 \printbibliography[heading=bibempty]
 
 
-\chapterimage{/chapter-image/remerciements.png}
+\chapterimage{/chapter-image/glossaire.png}
 \printglossaries
 \addcontentsline{toc}{chapter}{\textcolor{ocre}{Glossaire}}
 
