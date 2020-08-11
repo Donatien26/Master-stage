@@ -55,13 +55,13 @@
 \vspace{-2cm}
 L'Insee dispose d'une plateforme permettant aux développeurs de réaliser des tâches d'intégration continue et aux statisticiens de déployer des services à la demande. Cette plateforme repose actuellement sur une architecture dite conteneurisée.\\
 
-Ce rapport visera tout d'abord à présenter l'intérêt d'un tel système pour ce type de besoin. Par la suite nous nous focaliseront sur deux solutions d'orchestration de conteneurs : Mesos/Marathon puisque c'est la solution déjà en place à l'Insee, et Kubernetes le nouveau leader mondial dans ce domaine. Le but étant de pouvoir à la fin faire un choix entre l'une ou l'autre des solutions.\\
+Ce rapport visera tout d'abord à présenter l'intérêt d'un système conteneurisé pour ce type de besoin. Par la suite, deux solutions d'orchestration de conteneurs seront comparées : Mesos/Marathon puisque c'est la solution déjà en place à l'Insee, et Kubernetes le nouveau leader mondial dans ce domaine. Le but étant de pouvoir déterminer les atouts de l'une ou l'autre des solutions.\\
 
-Pour cela, Nous aborderons leur fonctionnement ainsi que comment y déployer une application. Ce sera l'occasion de découvrir deux gestionnaires de paquets adapté pour ces systèmes.\\
+Dans un premier temps, leur fonctionnement ainsi que la façon de déployer une application seront étudiés. Ce sera l'occasion de découvrir des outils permettant de générer rapidement des applications adaptées pour ces systèmes.\\
 
-Nous étudierons les diverses possibilités offerte par les deux systèmes dans le cadre de l'intégration continue. Cela nous amènera à présenter la notion de GitOps. Nous présenterons notamment Argo un outil performant dans la mise en place de tel processus.\\
+Les diverses possibilités offertes par les deux systèmes dans le cadre de l'intégration continue seront également examinées. Des outils automatisant le déploiement de code seront présentés. Un focus sera notamment fait sur Argo, un jeune projet mais qui répond à ce type de besoin.\\
 
-Enfin, la plateforme repose sur une application "maison" Onyxia permettant de déployer des services à la demande. Une dernière partie s'intéressera donc à la mise en place de Kubernetes sur cette application. Ce sera l'occasion de comparer ce que l'un ou l'autre des orchestrateurs propose afin de simplifier la mise en place d' un tel service.
+Enfin, la plateforme repose sur une application "maison", Onyxia, permettant de déployer des services à la demande. Une dernière partie s'intéressera donc à la mise en place de Kubernetes sur cette application. Ce sera l'occasion de comparer ce que l'un ou l'autre des orchestrateurs propose afin de simplifier la mise en place d'un tel service.
 
 
 
@@ -99,7 +99,7 @@ L’Institut national de la statistique et des études économiques (Insee) est 
 \section{Organisation de l'informatique à l'Insee}
 La DSI (Direction du Système d'Information) de l’Insee est divisée en deux principaux groupes :  d'un coté les développeurs (les "devs") et de l'autre la production (les "ops"), chacun s'occupant de tâches qui lui sont propres.\\
 
-Les développeurs s'occupent de la conception, de l'implémentation et de la maintenance des applications, des logiciels et du site web de l'Insee (insee.fr). Chaque équipe de développement travaille avec sa maîtrise d'ouvrage (MOA) qui lui spécifie ses besoins. Les développeurs de l’Insee sont rattachés au Département développement du système d’information (DDSI). Les équipes sont réparties au sein de plusieurs services de développement situés à Lille, Nantes,  Orléans, et Paris. Un pôle de compétence sur la gestion de progiciels(gestion de contenu et outils collaboratifs (Wordpress par exemple)) est situé à Aix-en-Provence.\\
+Les développeurs s'occupent de la conception, de l'implémentation et de la maintenance des applications, des logiciels et du site web de l'Insee (\url{www.insee.fr}). Chaque équipe de développement travaille avec sa maîtrise d'ouvrage (MOA) qui lui spécifie ses besoins. Les développeurs de l’Insee sont rattachés au Département développement du système d’information (DDSI). Les équipes sont réparties au sein de plusieurs services de développement situés à Lille, Nantes,  Orléans, et Paris. Un pôle de compétence sur la gestion de progiciels(gestion de contenu et outils collaboratifs (Wordpress par exemple) est situé à Aix-en-Provence.\\
 
 La production, quant à elle, gère la mise à disposition et le maintien des divers outils informatiques. Les travaux de production comprennent : la conception et maintenance du réseau interne, la gestion du parc bureautique, la conception et le maintien des infrastructures de production et déploiement, ainsi que la supervision des applications développées par le DDSI. Au sein de la DSI, ces travaux sont confiés au Département production et infrastructure informatiques (DPII). Le DPII (situé à Paris) pilote la production et prend les décisions concernant le système d’information de l’Insee. Ce sont les divisions du pilotage qui sont maîtrises d’ouvrage des applications transverses à l’informatique (mail, annuaire...). Deux services sont fonctionnellement rattachés au DPII :
 \begin{itemize}
@@ -116,15 +116,15 @@ Depuis septembre 2018, une nouvelle unité (UNISSI) a également vu le jour. Cet
     \item La Division innovation et instruction technique (Diit) accompagne les démarches d’innovation au sein de l’Insee. Elle est également propriétaire et administratrice de la plateforme innovation, une infrastructure de type Cloud privé dédiée à la pratique d’activités innovantes à la fois informatiques, organisationnelles et statistiques.\\
 \end{itemize}
 
-La coopération entre les équipes de production et de développement est essentielle. En effet, chaque application, à un moment donné dans son cycle de vie, est déployée en production. Il faut alors que les développeurs et les différentes équipes de la production soit en perpétuelle communication pour s'assurer que les besoins des uns et des autres soient bien pris en compte. Cette étape charnière est facilitée par les Responsables de l’intégration des applications en production (RIAP). La tendance actuelle, basée sur les méthodes agiles et sur des rythmes de mise en production plus soutenus,  soulève la question de la charge de travail de ces personnes. De nouvelles pratiques d'intégrations continues voient progressivement le jour au sein des développeurs.\newline
+La coopération entre les équipes de production et de développement est essentielle. En effet, chaque application, à un moment donné dans son cycle de vie, est déployée en production. Il faut alors que les développeurs et les différentes équipes de la production soit en perpétuelle communication pour s'assurer que les besoins des uns et des autres soient bien pris en compte. Cette étape charnière est facilitée par les Responsables de l’intégration des applications en production (RIAP). La tendance actuelle, basée sur les méthodes agiles et sur des rythmes de mise en production plus soutenus,  soulève la question de la charge de travail de ces personnes. De nouvelles pratiques d'intégration continue voient progressivement le jour au sein des développeurs.\newline
 
 \section{Onyxia: Une plateforme pour les rassembler tous}
-Le développement de telle pratique a été favorisé par l'instauration d'une forge logicielle. Une forge logicielle est une plateforme collaborative accessible par le Web permettant de travailler conjointement sur un même projet. L'Insee a choisit d'adopter Gitlab comme forge logicielle. Gitlab permet, au delà d'héberger du code, de déclarer des problèmes, mais aussi de réaliser des opérations d'intégration continue. En effet, Gitlab propose la mise en place de pipelines (un ensemble de tâches s'exécutant les unes à la suite des autres) permettant de construire une application, de la déployer, etc... Grâce a la mise en place de Gitlab, les développeurs ont donc pu avoir un premier aperçu de la notion d'intégration continue, et de conteneurisation.\newline
+Le développement de pratiques d'intégration continue a été favorisé par l'instauration d'une forge logicielle. Une forge logicielle est une plateforme collaborative accessible par le Web permettant de travailler conjointement sur un même projet. L'Insee a choisi d'adopter Gitlab comme forge logicielle. Gitlab permet, au-delà d'héberger du code, de déclarer des problèmes, mais aussi de réaliser des opérations d'intégration continue. En effet, Gitlab propose la mise en place de pipelines (un ensemble de tâches s'exécutant les unes à la suite des autres) permettant de construire une application, de la déployer, etc... Grâce à la mise en place de Gitlab, les développeurs ont donc pu avoir un premier aperçu de la notion d'intégration continue et de conteneurisation.\newline
 
-Gitlab est une des briques, mise en place par la division innovation, pour la mise en place d'une plateforme de type datalab. Un datalab est un espace exclusivement dédié à l’expérimentation et à la qualification « fonctionnelle » des différentes données de l’entreprise. En effet, il permet d’explorer des jeux de données, de les traiter, mais aussi de mettre à l’épreuve des algorithmes de Machine Learning.\\
+Gitlab est une des briques utilisée par la division innovation, pour la mise en place d'une plateforme de type datalab. Un datalab est un espace exclusivement dédié à l’expérimentation et à la qualification « fonctionnelle » des différentes données de l’entreprise. En effet, il permet d’explorer des jeux de données, de les traiter, mais aussi de mettre à l’épreuve des algorithmes de Machine Learning.\\
 
 
-Par ailleurs, la Diit a également développé une application appelée Onyxia. Cette application est un élément central du datalab et se veut comme un portail vers plusieurs applications : minIo (stockage), Vault (gestion des secrets), Keycloak pour de la sécurité, Marathon (pour le déploiement de services). Elle permet également de déployer des applications à la demande et déjà configurées. La plateforme repose sur une infrastructure conteneurisée à l'aide de l'orchestrateur de conteneurs Marathon. Ces deux notions sont présentées dans la suite du rapport 
+Par ailleurs, la Diit a également développé une application appelée Onyxia. Cette application est un élément central du datalab et se veut comme un portail vers plusieurs applications : minIo (stockage), Vault (gestion des secrets), Keycloak (pour de la sécurité), Marathon (pour le déploiement de services). Elle permet également de déployer des applications déjà configurées à la demande. La plateforme repose sur une infrastructure conteneurisée à l'aide de l'orchestrateur de conteneurs Marathon. Ces deux notions seront présentées dans la suite du rapport. 
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Graphique}
@@ -137,29 +137,29 @@ Par ailleurs, la Diit a également développé une application appelée Onyxia. 
 \section{Objectif et problématique du stage}
 Une architecture de type conteneur n'est pas un standard à l'Insee, l'infrastructure de production étant uniquement basée sur des VMs (Virtual Machine ou Machine Virtuelle). L'objectif de mon stage sera donc d'étudier \textbf{les intérêts de la mise en place d'une architecture conteneurisée pour de l'intégration continue ou du service en self-déploiement.}\\
 
-Tout d'abord, nous étudierons les différences entre VM et conteneur afin de comprendre en quoi une architecture conteneurisée peut être un atout. Par la suite, nous verrons qu'une telle architecture se doit de reposer sur un orchestrateur de conteneur. Ce qui nous amènera à faire la comparaison des deux orchestrateurs de conteneurs les plus utilisés actuellement : Marathon (solution utilisée pour la plateforme de l'innovation) et Kubernetes. Pour cela, nous nous appuierons notamment sur ce que les deux orchestrateurs peuvent proposer dans le cadre de l'intégration-continue, de services en self-déploiement, ainsi qu'en terme d'aide au développement et de sécurité.
+Tout d'abord, nous étudierons les différences entre VM et conteneur afin de comprendre en quoi une architecture conteneurisée peut être un atout. Par la suite, nous verrons qu'une telle architecture se doit de reposer sur un orchestrateur de conteneur. Ce qui nous amènera à faire la comparaison des deux orchestrateurs de conteneurs les plus utilisés actuellement : Marathon (solution utilisée pour la plateforme de l'innovation) et Kubernetes. Pour cela, nous nous appuierons notamment sur ce que les deux orchestrateurs peuvent proposer dans le cadre de l'intégration continue, de services en self-déploiement, ainsi qu'en terme d'aide au développement et de sécurité.
 
 
 \chapterimage{chapter-image/orchestrateur-01.jpg} % Chapter heading image
 \chapter{Orchestrateurs et conteneurs}
 \vspace{-2cm}
 
-Dans cette partie nous allons expliquer pourquoi les conteneurs ont été choisit comme brique centrale du datalab. Pour cela, nous repartirons dans le passé et étudierons comment une application était initialement déployée. Nous présenterons également les orchestrateurs de conteneurs, puisque c'est un élément essentiel lorsque l'on doit gérer un parc de conteneurs conséquent.
+Dans cette partie nous allons expliquer pourquoi les conteneurs ont été choisi comme brique centrale du datalab. Pour cela, nous repartirons dans le passé et étudierons comment une application était initialement déployée. Nous présenterons également les orchestrateurs de conteneurs, puisque c'est un élément essentiel lorsque l'on doit gérer un parc de conteneurs conséquent.
 
 \section{Du serveur physique au conteneur, évolution}
 \subsection{Serveur physique}
-Initialement (avant les années 1970 et jusqu'au début des années 2000 à l'Insee), une application était installée sur un un serveur physique. On créait alors les environnements avec des batchs\footnote{Un batch désigne l'automatisation d'une suite de commandes exécutées en série sur un ordinateur sans qu'il soit nécessaire qu'un opérateur intervienne pour réaliser cette opération.}, que l'on lançait manuellement. Les applications était déployées sur le même OS (Operating System ou système d'exploitation) sur une seule machine physique. On n'avait donc aucun moyen de limiter les ressources utilisées par une application. Par exemple, si sur une machine nous avions deux applications A et B, si A utilisait trop de ressources alors B avait des performances médiocres. La solution aurait été de n'installer qu'une application par serveur, mais cela aurait conduit à des ressources non utilisées et un coût élevé pour les entreprises. \newline
+Initialement (avant les années 1970 et jusqu'au début des années 2000 à l'Insee), une application était installée sur un un serveur physique. On créait alors les environnements avec des batchs\footnote{Un batch désigne l'automatisation d'une suite de commandes exécutées en série sur un ordinateur, sans qu'il soit nécessaire qu'un opérateur intervienne pour réaliser cette opération.}, que l'on lançait manuellement. Les applications étaient déployées sur le même OS (Operating System ou système d'exploitation comme Windows par exemple) sur une seule machine physique. On n'avait donc aucun moyen de limiter les ressources utilisées par une application. Par exemple, si sur une machine nous avions deux applications A et B, si A utilisait trop de ressources alors B avait des performances médiocres. La solution aurait été de n'installer qu'une application par serveur, mais cela aurait conduit à des ressources non utilisées et un coût élevé pour les entreprises. \newline
 
 \subsection{Virtualisation}
-Dans un système d'information, plusieurs applications cohabitent et il est nécessaire que les applications soient indépendantes les unes des autres. Les solutions dites de virtualisation permettent de transformer une ressource physique en un ensemble de ressources logiques isolées. Il est ainsi possible de virtualiser entre autres un réseau ou une machine physique. On fait ainsi fonctionner plusieurs “machines” logiques sur une même machine physique appelée hôte. La virtualisation permet de rendre indépendantes les couches basses (basse = matériel) d’une ressource de ses couches hautes (haute = traitements): les couches hautes peuvent ainsi être aisément déplacées sur une autre infrastructure (en cas de panne ou si les ressources deviennent insuffisantes par exemple).
+Dans un système d'information, plusieurs applications cohabitent et il est nécessaire que les applications soient indépendantes les unes des autres. Les solutions dites de virtualisation permettent de transformer une ressource physique en un ensemble de ressources logiques isolées. Il est donc possible de virtualiser, entre autres, un réseau ou une machine physique. On fait ainsi fonctionner plusieurs “machines” logiques sur une même machine physique appelée hôte. La virtualisation permet de rendre indépendantes les couches basses (matériel) d’une ressource et les couches hautes (applications, traitements). Les couches hautes peuvent ainsi être aisément déplacées sur une autre infrastructure (en cas de panne ou si les ressources deviennent insuffisantes par exemple).
 \paragraph{Les Machines virtuelles}
-A partir de 1970 (et au début des années 2000 à l'Insee), apparaît  la notion de machine virtuelle (VM). Les VMs sont des serveurs logiques entiers qui embarquent leur propre système d’exploitation. L’hyperviseur est un applicatif tournant sur l’hôte qui va émuler (ou simuler) le matériel pour la machine virtuelle : le noyau du système d’exploitation de la machine virtuelle croit communiquer avec le matériel de la machine alors qu’il communique avec l’hyperviseur.
+A partir de 1970 (et au début des années 2000 à l'Insee), apparaît  la notion de machine virtuelle (VM). Les VMs sont des serveurs logiques entiers qui embarquent leur propre système d’exploitation. L’hyperviseur est un applicatif tournant sur l’hôte qui va émuler (ou simuler) le matériel pour la machine virtuelle. Le noyau du système d’exploitation de la machine virtuelle croit communiquer avec le matériel de la machine alors qu’il communique avec l’hyperviseur.
 
-Avec le développement des machines virtuelles, de nouveaux outils sont apparus au cours des années 2000/2010 (tel que Puppet\footnote{Puppet est un logiciel libre permettant la gestion de la configuration de serveurs : \url{https://puppet.com/}} ou rundeck \footnote{Rundeck est un logiciel libre permettant l'automatisation d'administration de serveurs via la création de jobs ou tâches. \url{https://www.rundeck.com/open-source}}), qui permettent notamment de configurer automatiquement et rapidement les VMs.
+Avec le développement des machines virtuelles, de nouveaux outils sont apparus au cours des années 2000/2010 (tels que Puppet\footnote{Puppet est un logiciel libre permettant la gestion de la configuration de serveurs : \url{https://puppet.com/}} ou rundeck \footnote{Rundeck est un logiciel libre permettant l'automatisation d'administration de serveurs via la création de jobs ou tâches : \url{https://www.rundeck.com/open-source}}), qui permettent notamment de configurer automatiquement et rapidement les VMs.
 
 
 \paragraph{Les conteneurs}
-Un conteneur est une unité logicielle standardisée qui regroupe le code, les dépendances, les binaires et l'environnement nécessaires au bon fonctionnement de l'application. Par conséquent, un conteneur est un "package" facile à déplacer d'un environnement à l'autre puisque tout l'écosystème et tout le code est présent à l'intérieur de ce conteneur. Un autre avantage est que, peu importe où s'exécute l'application, le fonctionnement sera identique puisque l'écosystème vient avec le conteneur. Cela permet notamment que l'application se comporte de la même façon, à la fois sur le poste du développeur, que sur un cloud privé ou public. \\
+Un conteneur est une unité logicielle standardisée qui regroupe le code, les dépendances, les binaires\footnote{Les binaires désignent tous les fichiers qui ne sont pas interprétables sous forme de texte. Il peut s'agir de fichier compressé ou exécutable.} et l'environnement nécessaires au bon fonctionnement de l'application. Par conséquent, un conteneur est un "package" facile à déplacer d'un environnement à l'autre, puisque tout l'écosystème et tout le code sont présents à l'intérieur de ce conteneur. Un autre avantage est que, peu importe où s'exécute l'application, le fonctionnement sera identique puisque l'écosystème vient avec le conteneur. Cela permet notamment que l'application se comporte de la même façon, à la fois sur le poste du développeur, que sur un cloud privé ou public. \\
 
 
 
@@ -179,46 +179,46 @@ Les machines virtuelles comme les conteneurs proposent chacun une solution pour 
 Dans le cadre des VMs, l'administrateur a le choix du système d'exploitation utilisé par chacune des VMs. En effet, chaque VM possède son propre système d'exploitation, il est indépendant des autres OS des VMs installées sur la même machine, et il est même indépendant de l'OS du système hôte. De son coté, le conteneur utilise le système d'exploitation du système sur lequel il est déployé et cet OS est partagé avec l'ensemble des conteneurs qui s'exécutent sur la machine. Les machines virtuelles sont donc plus flexibles sur ce point-ci.
 
 \paragraph{Taille d'une application}
-Par ailleurs, cette flexibilité des VMs s'accompagne d'un espace de stockage nécessaire bien plus importante. En effet, l'ISO\footnote{Les fichiers ISO (International Standard File) sont des fichiers images, contenant des données, qui peuvent être gravés sur un CD/DVD ou mis sur la clé USB, ils servent notamment à l'installation des VMs} d'une VM a une taille plus importante que l'image d'un conteneur\footnote{Une image de conteneur est un fichier statique non modifiable. Il renferme un code exécutable de manière à exécuter un processus isolé dans une infrastructure informatique.}. Pour une VM, il faut packager l'OS, les librairies et l'application ; alors que pour un conteneur, seuls sont nécessaires les librairies et l'application. Ce phénomène s'accentue d'autant plus que l'on veut un nombre de réplicas\footnote{Nombre d'instance d'une application} élevés.
+Par ailleurs, cette flexibilité des VMs s'accompagne d'un espace de stockage nécessaire bien plus important. En effet, l'ISO\footnote{Les fichiers ISO (International Standard File) sont des fichiers images, contenant des données, qui peuvent être gravés sur un CD/DVD ou mis sur une clé USB, ils servent notamment à l'installation des VMs.} d'une VM a une taille plus importante que l'image d'un conteneur\footnote{L'image d'un conteneur est un fichier statique non modifiable. Il renferme un code exécutable de manière à exécuter un processus isolé dans une infrastructure informatique.}. Pour une VM, il faut packager l'OS, les librairies et l'application. Alors que pour un conteneur, seuls sont nécessaires les librairies et l'application. Ce phénomène s'accentue d'autant plus que l'on veut un nombre de réplicas\footnote{Nombre d'instance d'une application} élevés.
 
 \paragraph{Rapidité de démarrage}
 De même, les conteneurs démarrent bien plus rapidement qu'une machine virtuelle.
 Selon l'étude \textit{Comparative Study of Virtual Machines and Containers for DevOps Developers\footnote{\url{https://www.researchgate.net/publication/327237114_Comparative_Study_of_Virtual_Machines_and_Containers_for_DevOps_Developers}}}, une distribution Ubuntu (un système d'exploitation basé sur Linux) met 40 ms pour démarrer et 29 ms pour s'arrêter à partir d'un conteneur, contre près de 59 s pour démarrer et 30 s pour s'éteindre sur une VM.
 
 \paragraph{Rapidité d'écriture des données}
-Cette même étude montre également que la vitesse d'écriture et de lecture de données depuis un conteneur est plus rapide que depuis une VM. En effet, un Ubuntu dans un conteneur effectue quasiment autant d'opérations de lecture et d'écriture qu'un Ubuntu installé directement sur une machine. Les VMs ont un rendement 25\% plus faibles. 
+Cette même étude montre également que la vitesse d'écriture et de lecture de données depuis un conteneur est plus rapide que depuis une VM. En effet, un Ubuntu dans un conteneur effectue quasiment autant d'opérations de lecture et d'écriture qu'un Ubuntu installé directement sur une machine. Les VMs ont un rendement 25\% plus faible. 
 
 \paragraph{Sauvegarder, restaurer, migrer}
-VirtualBox, Vmware ou encore KVM proposent des solutions afin de réaliser des sauvegardes et/ou de restaurer des machines virtuelles à partir de sauvegardes. Dans le monde du conteneur de telles solutions sont quasi inexistantes \footnote{Il existe un projet, en cours de développement appelé CRIU et qui permet de sauvegarder l'état d'un conteneur}, puisque une application s'exécutant dans un conteneur n'a pas vocation à vivre éternellement. (On verra plus loin que les conteneurs n'ont pas vocation à perdurer (leur durée de vie moyenne étant de 5 min). Les orchestrateurs de conteneurs peuvent les arrêter et les redémarrer plusieurs fois par jour (et même en production) sans aucune interruption de service.)
+VirtualBox, VMware ou encore KVM proposent des solutions afin de réaliser des sauvegardes et/ou de restaurer des machines virtuelles à partir de sauvegardes. Dans le monde du conteneur, de telles solutions sont quasi inexistantes \footnote{Il existe un projet, en cours de développement appelé CRIU et qui permet de sauvegarder l'état d'un conteneur.}. En effet, une application s'exécutant dans un conteneur n'a pas vocation à vivre éternellement. (On verra plus loin que les conteneurs n'ont pas vocation à perdurer (leur durée de vie moyenne étant de 5 min.) Les orchestrateurs de conteneurs peuvent les arrêter et les redémarrer plusieurs fois par jour (et même en production) sans aucune interruption de service.
 
 \paragraph{Sécurité}
-Cependant, les machines virtuelles offrent une plus grande sécurité. En effet, si un attaquant arrive à sortir de l'application (et à avoir accès à la couche supérieure), dans le cadre d'une VM ce dernier aura accès au BIOS, au réseau de la VM, mais il ne pourra pas accèder aux autres VMs (même celles de la même machine). Les conteneurs n'offrent pas cette isolation, un attaquant qui sortirait de l'application s'exécutant dans le conteneur pourrait alors accéder aux librairies partagées et donc accéder aux autres conteneurs. Cette faille pouvant être causée aussi bien par le développeur que par les dépendances qui auront servis à construire l'image.\footnote{\url{https://www.lemondeinformatique.fr/actualites/lire-une-faille-dans-runc-rend-vulnerable-docker-et-kubernetes-74312.html}} 
+Cependant, les machines virtuelles offrent une plus grande sécurité. En effet, si un attaquant arrive à sortir de l'application (et à avoir accès à la couche supérieure), dans le cadre d'une VM ce dernier aura accès au BIOS, au réseau de la VM, mais il ne pourra pas accèder aux autres VMs (même celles de la même machine). Les conteneurs n'offrent pas cette isolation, un attaquant qui sortirait de l'application s'exécutant dans le conteneur pourrait alors accéder aux librairies partagées et donc accéder aux autres conteneurs. Cette faille pouvant être causée aussi bien par le développeur que par les dépendances qui auront servies à construire l'image.\footnote{\url{https://www.lemondeinformatique.fr/actualites/lire-une-faille-dans-runc-rend-vulnerable-docker-et-kubernetes-74312.html}} 
 
 \begin{interrupt}
 \paragraph{Comment choisir ?}
-Dans le cadre de la plateforme innovation et la mise en place de processus d'application en self-service, on recherche une solution de virtualisation qui soit rapide à  déployer, légère, facile à supprimer et à reproduire. Les conteneurs semblent donc être la solution idéale, malgré les problèmes de sécurité, puisqu'ils peuvent être facilement contournés \footnote{La sécurité avec Kubernetes et les conteneurs Docker : une histoire sans fin (A. Roman \& C. Dubois) : \url{https://www.youtube.com/watch?v=EEuV_mgRNsY&t=2196s}}(voir annexe \ref{securite}). Par sa faible taille, le conteneur est l'outil idéal pour réaliser des tâches d'intégration continue et le déploiement d'environnement de tests à la volée.
+Dans le cadre de la plateforme innovation et la mise en place de processus d'application en self-service, on recherche une solution de virtualisation qui soit rapide à  déployer, légère, facile à supprimer et à reproduire. Par sa faible taille, le conteneur est également l'outil idéal pour réaliser des tâches d'intégration continue et le déploiement d'environnements de tests à la volée. Les conteneurs semblent donc être la solution idéale, malgré les problèmes de sécurité, puisqu'ils peuvent être facilement contournés (voir annexe \ref{securite}).
 \end{interrupt}
 
 \section{Qu'est-ce qu'un orchestrateur ? }
-Les architectures applicatives modernes prônent le découpage des applications en modules de petite taille, répondant à un besoin fonctionnel ou technique bien identifié. Ces modules doivent être, dans la mesure du possible, indépendants du système qui les exécute, pour ne conserver que des dépendances logiques entre eux. La notion à la mode est celle d’architecture microservices. Cette notion d'architecture microservice a entrainé une augmentation du nombre de conteneurs déployés afin de faire fonctionner un seul service. Il a donc fallu créer un outil capable de gérer un ensemble de conteneurs : l'orchestrateur de conteneurs.\\ 
+Les architectures applicatives modernes prônent le découpage des applications en modules de petite taille, répondant à un besoin fonctionnel ou technique bien identifié. Ces modules doivent être, dans la mesure du possible, indépendants du système qui les exécute, pour ne conserver que des dépendances logiques entre eux. La notion à la mode est celle d’architecture microservices. Cette notion d'architecture microservices a entrainé une augmentation du nombre de conteneurs déployés afin de faire fonctionner un seul service. Il a donc fallu créer un outil capable de gérer un ensemble de conteneurs : l'orchestrateur de conteneurs.\\ 
 
-La mission d'un orchestrateur de conteneurs est de répartir les conteneurs sur un ensemble de machines. Un orchestrateur de conteneurs est composé de 3 ensembles de machines :
+La mission d'un orchestrateur de conteneurs est de répartir les conteneurs sur un ensemble de machines. Un orchestrateur de conteneurs est composé de trois ensembles de machines :
 \begin{itemize}
-    \item Les workers nodes (noeud de travail): ce sont les machines sur lesquels s'exécuteront les conteneurs, ce sont généralement les machines les plus puissantes de la grappe de serveur (cluster). Chacune de ces machines héberge le moteur d'exécution \footnote{Un environnement d'exécution ou runtime est un logiciel responsable de l'exécution des programmes informatiques écrits dans un langage de programmation donné} ainsi qu'un agent qui communique avec les masters nodes.
-    \item Les masters nodes (noeud maître) : ce sont les machines qui vont gouverner le cluster, qui vont gérer l'ensemble des ressources disponibles (RAM, CPU, GPU, espace disque) sur chaque noeud de travail. C'est également le master node qui a les responsabilités de relancer les conteneurs défaillants. C'est généralement le point d'entrée du cluster pour les développeurs.
-    \item Les publics nodes (noeuds public) :  ce sont les machines exposées sur internet. Elles vont servir de relais entre internet et l'intérieur de notre plateforme. Ces dernières jouent le rôle de reverse proxy.\\
+    \item Les workers nodes (nœud de travail): ce sont les machines sur lesquels s'exécuteront les conteneurs, ce sont généralement les machines les plus puissantes de la grappe de serveur (cluster). Chacune de ces machines héberge le moteur d'exécution \footnote{Un environnement d'exécution ou runtime est un logiciel responsable de l'exécution des programmes informatiques écrits dans un langage de programmation donné.} ainsi qu'un agent qui communique avec les masters nodes.
+    \item Les masters nodes (nœud maître) : ce sont les machines qui vont gouverner le cluster, qui vont gérer l'ensemble des ressources disponibles (RAM, CPU, GPU, espace disque) sur chaque nœud de travail. C'est également le master node qui a la responsabilité de relancer les conteneurs défaillants. C'est généralement le point d'entrée du cluster pour les développeurs.
+    \item Les publics nodes (nœuds public) :  ce sont les machines exposées sur internet. Elles vont servir de relais entre internet et l'intérieur de notre plateforme. Ces dernières jouent le rôle de reverse proxy.\\
 \end{itemize}
  
-L'orchestrateur permet donc d'assurer un rôle de surveillant de l'état des conteneurs. En effet, à partir d'un fichier descriptif qui contient le nombre de conteneurs souhaités, l'état désiré, etc... et à l'aide de healtcheck\footnote{Contrôle servant à vérifier si l'application s'exécute correctement} régulier, il est capable de détecter les conteneurs en mauvaise santé afin d'en démarrer de nouveaux et de toujours maintenir le système dans un état de fonctionnement optimal.\\
-Il est aussi capable de tenir compte des contraintes dynamiques : en effet, les contraintes évoluent dans le temps. Par exemple, on peut vouloir que deux conteneurs ne soient jamais sur le même serveur pour garantir une haute disponibilité de services, ou encore, on peut vouloir que les conteneurs soient déployés sur des serveurs éloignés afin de limiter la latence pour l'utilisateur. L'orchestrateur sait également réagir en cas de perte d'une des machines. Il permet donc de mettre en place des mécanismes de haut niveau : haute disponibilité, monitoring, le Service Discovery \footnote{Service Discovery est un protocole réseau qui permet la découverte de service.} et la gestion du trafic réseau,  scalabilité horizontale \footnote{Ajout de nouveaux serveurs réalisant le même type de tâche} et verticale \footnote{Ajout de ressources à un unique serveur (CPU,memoire,...).}, le provisionning et le placement des conteneurs.\\
+L'orchestrateur permet donc d'assurer un rôle de surveillant de l'état des conteneurs. En effet, à partir d'un fichier descriptif qui contient le nombre de conteneurs souhaités, l'état désiré, etc et à l'aide de healtcheck\footnote{Contrôle servant à vérifier si l'application s'exécute correctement} régulier, il est capable de détecter les conteneurs en mauvaise santé. Il pourra ainsi en démarrer de nouveaux et toujours maintenir le système dans un état de fonctionnement optimal.\\
+L'orchestrateur est aussi capable de tenir compte des contraintes dynamiques. En effet, les contraintes évoluent dans le temps. Par exemple, on peut vouloir que deux conteneurs ne soient jamais sur le même serveur pour garantir une haute disponibilité de services. Ou encore, on peut vouloir que les conteneurs soient déployés sur des serveurs éloignés afin de limiter la latence pour l'utilisateur. L'orchestrateur sait également réagir en cas de perte d'une des machines. Il permet donc de mettre en place des mécanismes de haut niveau : haute disponibilité, monitoring, Service Discovery \footnote{Service Discovery est un protocole réseau qui permet la découverte de service.}, gestion du trafic réseau,  scalabilité horizontale \footnote{La scalabilité horizontale correspond à l'ajout de nouveaux serveurs réalisant le même type de tâche.} et verticale \footnote{La scalabilité verticale correspond à l'ajout de ressources à un unique serveur (CPU, mémoire, etc).}, provisionning\footnote{En francais provisionnement, désigne l'allocation automatique de ressources.} et placement des conteneurs.\\
 
 
 
 \section{Les différents orchestrateurs}
-Aujourd'hui, plusieurs solutions d'orchestration existent, mais trois se démarquent : Kubernetes, DC/OS avec Mesos/Marathon et  Docker Swarm.\footnote{Il existe d'autres solutions tel que OpenShift ou encore Rancher mais ne sont, au final, que des customizations de Kubernetes.}
+Aujourd'hui, plusieurs solutions d'orchestration existent, mais trois se démarquent : Kubernetes, DC/OS avec Mesos/Marathon et  Docker Swarm.\footnote{Il existe d'autres solutions telles que OpenShift ou encore Rancher mais elles ne sont, au final, que des customizations de Kubernetes.}
 
 \subsection{Mesos/Marathon}
-Mesos est la solution la plus ancienne parmi les trois citées. Développée initialement par Mesosphère (qui est devenu DC/OS puis récemment D2IQ), sa genèse remonte à une époque (2008) où la popularité des conteneurs était nettement moindre. Le concept de Mesos est de regrouper un ensemble de ressources (RAM, CPU) pour proposer une vue agrégée, permettant d’exécuter des programmes (conteneurisés ou pas). Mesos n’a pas vocation à être utilisé seul. Il délègue l’exécution des programmes à ses frameworks\footnote{Voir plus loin}. Parmi eux, les plus utilisés sont certainement Marathon et Aurora. Ce sont eux qui, sur la base d’un fichier, sont responsables de placer les conteneurs et de garantir leur exécution dans les conditions souhaitées.\\
+Mesos est la solution la plus ancienne parmi les trois citées. Développée initialement par Mesosphère (qui est devenu DC/OS, puis récemment D2IQ), sa genèse remonte à une époque (2008) où la popularité des conteneurs était nettement moindre. Le concept de Mesos est de regrouper un ensemble de ressources (RAM, CPU) pour proposer une vue agrégée, permettant d’exécuter des programmes (conteneurisés ou pas). Mesos n’a pas vocation à être utilisé seul. Il délègue l’exécution des programmes à ses frameworks\footnote{Voir plus loin}. Parmi eux, les plus utilisés sont certainement Marathon et Aurora. Ce sont eux qui, sur la base d’un fichier, sont responsables de placer les conteneurs et de garantir leur exécution dans les conditions souhaitées.\\
 
 C'est la solution actuellement utilisé sur la plateforme de l'innovation pour manager les différentes ressources : service à la demande, gitlab, job gitlab\footnote{Tâche s'exécutant sur les runners}, etc... \\ 
 
@@ -231,7 +231,7 @@ Swarm est la solution d’orchestration fournie par Docker. Il est difficile de 
 
 Pour cette étude, nous nous intéresserons plus particulièrement à Mesos/Marathon (solution actuellement en place à l'Insee sur la plateforme innovation, par le biais de la licence entreprise DC/OS) et Kubernetes (par le biais de Google Cloud Provider (GCP))\footnote{Nous avons utiliser GCP pour plusieurs raison: installer Kubernetes sur ces propres machines est relativement coûteux en temps, et en moyen humain (en moyenne une telle installation nécessite près de 6 mois pour être réalisée par une équipe d'une dizaine de personne à temps plein). Utiliser GCP nous a permis d'éviter de nous concentrer sur la maintenance des machines et de nous concentrer uniquement sur ce que pouvait apporter l'orchestrateur en terme de fonctionnalité. Ce choix nous a également permis de pouvoir poursuivre les travaux malgré le confinement dû au covid-19.} , le nouveau leader mondial dans l'orchestration de conteneur.\newline
 
-Selon Sysdig \footnote{ Rapport disponible ici : \url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}} plus de 77\% des personnes qui utilisent un orchestrateur de conteneur utilisent Kubernetes, et ce taux monte à plus de 85\% si l'on ajoute les solutions openshift et rancher (basées sur Kubernetes). Par ailleurs, Kubernetes bien qu'étant l'orchestrateur de conteneur le plus récent, possède déjà le plus grand nombre de commits\footnote{Un commit est le fait d'enregistrer dans un outil de gestion de versions (GitLab) une nouvelle version d'un ensemble de fichiers}, et une communauté active.
+Selon Sysdig \footnote{ Rapport disponible ici : \url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}} plus de 77\% des personnes qui utilisent un orchestrateur de conteneur utilisent Kubernetes, et ce taux monte à plus de 85\% si l'on ajoute les solutions openshift et rancher (basées sur Kubernetes). Par ailleurs, Kubernetes bien qu'étant l'orchestrateur de conteneur le plus récent, possède déjà le plus grand nombre de commits\footnote{Un commit est le fait d'enregistrer dans un outil de gestion de versions (GitLab) une nouvelle version d'un ensemble de fichiers}, une communauté active, et un cycle de développement très court (une version majeure est déployée tout les 3 mois).
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Graphique}
@@ -250,7 +250,7 @@ Source : Sysdig, \url{https://sysdig.com/blog/sysdig-2019-container-usage-report
 \chapter{Architecture et fonctionnement}
 \vspace{-2cm}
 
-Dans cette première partie, nous présenterons l'architecture sur laquelle repose l'un et l'autre des 2 orchestrateurs, leur spécifiée et ce qui les différencie.
+Dans cette première partie, nous présenterons l'architecture sur laquelle repose l'un et l'autre des 2 orchestrateurs, leur spécifiée et ce qui les différencie. Dans un dernier temps nous aborderons quelques notions de sécurités: définition des besoins et outils à mettre en place.
 
 
 
@@ -282,7 +282,7 @@ Le kube-controler manager est le composant qui contrôle l'état du cluster en c
 \end{itemize}
 
 \paragraph{Le cloud-controller manager\footnote{Plus d'informations ici : \url{https://kubernetes.io/fr/docs/concepts/overview/components/\#cloud-controller-manager}}}
-Ce composant permet de lier le cluster Kubernetes à la logique du provider cloud. C'est une surcouche qui n'est pas toujours présente (notamment dans le cas d'une installation dite on-premise). Il permet notamment au provider cloud d'ajouter des routes dans le cluster (à la manière d'un reverse proxy). Il ajoute également un volume-controller afin de pouvoir créer des Volumes \footnote{Un volume est un espace de stockage, indépendant du conteneur, ce qui permet de persister des données et de les récupérer même si le conteneur vient a être tuer.} et interagir avec le fournisseur cloud pour les orchestrer.
+Ce composant permet de lier le cluster Kubernetes à la logique du provider cloud. C'est une surcouche qui n'est pas toujours présente (notamment dans le cas d'une installation dite on-premise\footnote{Une installation on-Premise est une installation réalisée de A à Z sans passer par un fournisseur. L'entreprise installe toute les briques nécessaires une par une.}). Il permet notamment au provider cloud d'ajouter des routes dans le cluster (à la manière d'un reverse proxy). Il ajoute également un volume-controller afin de pouvoir créer des Volumes \footnote{Un volume est un espace de stockage, indépendant du conteneur, ce qui permet de persister des données et de les récupérer même si le conteneur vient a être tuer.} et interagir avec le fournisseur cloud pour les orchestrer.
 
 \paragraph{Le kube-scheduler}
 Le kube-scheduler est le composant du master node qui est responsable de la surveillance des Pods qui viennent d'être créés. En effet, Kubernetes autorise les utilisateurs à lancer sur le cluster des conteneurs. Le kube-scheduler choisi automatiquement quel(s) node(s) va accueillir le ou les conteneurs nouvellement créé(s). Le scheduler détecte les Pods qui ne sont pas affectés, et il les associe à des nodes par le biais de l'api-server, en fonction des besoins et des ressources disponibles.
@@ -293,7 +293,7 @@ Chaque composant que nous allons voir ici, est exécuté sur chaque node. Ils ma
 \paragraph{Le Kubelet}
 Le kubelet est le principal composant qui s'exécute sur chaque node. Il peut enregistrer le node auprès de l'api-server en utilisant l'un des éléments suivants : le nom d'hôte, un flag\footnote{Une annotation servant d'identifiant} pour remplacer le nom d'hôte ou une logique spécifique pour un fournisseur de services cloud.\\
 
-Le kubelet fonctionne en termes de PodSpec. Un PodSpec est un objet (un contrat) kubernetes qui décrit un Pod. Le kubelet prend un ensemble de PodSpecs qui sont fournis par divers mécanismes (principalement par l'api-server) et s'assure que les conteneurs décrits dans ces PodSpecs fonctionnent et sont en bonne santé.
+Le kubelet fonctionne en termes de PodSpec. Un PodSpec est un objet (un contrat) Kubernetes qui décrit un Pod. Le kubelet prend un ensemble de PodSpecs qui sont fournis par divers mécanismes (principalement par l'api-server) et s'assure que les conteneurs décrits dans ces PodSpecs fonctionnent et sont en bonne santé.
 
 \paragraph{Le Kube-Proxy}
 Kube-proxy est un proxy réseau qui s’exécute sur chaque node du cluster et implémente une partie du mécanisme de Service Discovery.
@@ -306,7 +306,7 @@ En résumé, on peut schématiser un cluster Kubernetes de la manière suivante 
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Graphique}
-\includegraphics[scale=0.1]{Pictures/Comparaison/Kubernetes-cluster-archi.png}
+\includegraphics[scale=0.09]{Pictures/Comparaison/Kubernetes-cluster-archi.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Schéma récapitulatif des entitées présentes dans un cluster Kubernetes \newline}
 \end{figure}
@@ -330,20 +330,20 @@ Tout d'abord, il faut savoir qu'il est impossible d'utiliser l'orchestrateur de 
 % - v2 : L'équivalent du control plane est le master node pour un cluster Mesos.
 \subsection{Les composants du control plane}
 Dans le cadre d'un cluster Mesos le master node est aussi appelé control-plane. Il abrite deux entitées, le Mesos master et les Mesos frameworks.
-\paragraph{Le mesos master}
+\paragraph{Le Mesos master}
 Le Mesos master est le cœur du cluster. Il garantit la haute disponibilité du cluster. Il héberge l'interface utilisateur qui fournit des informations sur les ressources disponibles dans le cluster. L'API Mesos est accessible par ligne de commande ou directement par requête HTTP. Le Mesos master est la source centrale de toutes les tâches en cours, il est la source de vérité dans le cluster. Il stocke en mémoire toutes les données relatives aux tâches, à l'état du cluster. Pour une tâche, il ne stocke que les informations nécessaires, ce qui permet au master de fournir à l'interface utilisateur les données relatives aux tâches avec une latence minimale. C'est le master qui alloue les ressources aux différents frameworks Mesos.
 
 \paragraph{Les schedulers}
-Le scheduler est en fait un des deux composants des Framework mesos. Le framework mesos est composé de deux éléments : le scheduler et l'executor. Le premier étant situé dans le control plane et le deuxième dans les Mesos agents (équivalent des worker-nodes) rattachés à ce framework\footnote{Mesos permet d'assigner, ou non, des worker-nodes à un seul framework uniquement}. On s'intéresse ici uniquement au scheduler. \\
+Le scheduler est en fait un des deux composants des Framework Mesos. Le framework Mesos est composé de deux éléments : le scheduler et l'executor. Le premier étant situé dans le control plane et le deuxième dans les Mesos agents (équivalent des worker-nodes) rattachés à ce framework\footnote{Mesos permet d'assigner, ou non, des worker-nodes à un seul framework uniquement}. On s'intéresse ici uniquement au scheduler. \\
 
-Lorsqu'il est déployé, le scheduler s'enregistre auprès du master Mesos et obtient un identifiant. A chaque requête reçue par le Mesos master, ce dernier délègue la requête au bon scheduler. Lorsque le scheduleur reçoit la requête, il évalue si il peut satisfaire la demande (par exemple déployer une application) en fonction des ressources que le mesos master met à sa disposition. Il est également responsable de la gestion des échecs et des erreurs des tâches qu'il doit gérer. \\
+Lorsqu'il est déployé, le scheduler s'enregistre auprès du master Mesos et obtient un identifiant. A chaque requête reçue par le Mesos master, ce dernier délègue la requête au bon scheduler. Lorsque le scheduleur reçoit la requête, il évalue si il peut satisfaire la demande (par exemple déployer une application) en fonction des ressources que le Mesos master met à sa disposition. Il est également responsable de la gestion des échecs et des erreurs des tâches qu'il doit gérer. \\
 \paragraph{Marathon}
 Marathon est un des scheduler qui peut être déployé dans Mesos. Marathon est même un des piliers de l'architecture des clusters Apache Mesos. Utilisé en production pour l'orchestration de conteneurs, Marathon fournit une API REST pour le démarrage, l'arrêt et la mise à l'échelle des applications. Écrit en Scala, Marathon peut fonctionner en mode haute disponibilité en exécutant plusieurs copies de lui même. L'état des tâches en cours d'exécution est stocké dans la base de données du Mesos master.\\
 
 Marathon est en fait un méta-scheduler, ce qui signifie qu'il peut démarrer d'autres schedulers Mesos tels que Chronos ou Storm. Marathon en tant qu'orchestrateur de conteneur va s'assurer qu'ils survivent aux pannes de machine. Il peut lancer tout ce qui peut être lancé dans un shell standard. (On peut même lancer une autre instance de Marathon via Marathon.)
 
 \subsection{Les composants du Mesos agent}
-Un cluster Mesos est composé de plusieurs mesos agent, ce sont les équivalent des workers nodes. L'ensemble des tâches va donc s'éxécuter sur ces machines. Sur chaque mesos agent on retrouve trois composants : le ou les schedulers locaux ainsi que leur executor associé et un processus appelé Mesos agent. Le Mesos agent fournit au Mesos master les informations relatives à l'hôte dans lequel il s'exécute (y compris les données sur les tâches en cours, les ressources disponibles de l'hôte qui lui sont allouées et d'autres métadonnées).
+Un cluster Mesos est composé de plusieurs Mesos agent, ce sont les équivalent des workers nodes. L'ensemble des tâches va donc s'éxécuter sur ces machines. Sur chaque Mesos agent on retrouve trois composants : le ou les schedulers locaux ainsi que leur executor associé et un processus appelé Mesos agent. Le Mesos agent fournit au Mesos master les informations relatives à l'hôte dans lequel il s'exécute (y compris les données sur les tâches en cours, les ressources disponibles de l'hôte qui lui sont allouées et d'autres métadonnées).
 
 \paragraph{Le scheduler local}
 Le scheduler local communique avec le Mesos agent pour lui fournir l'état des tâches dont il a la responsabilité (l'état des applications pour Marathon par exemple). Si l'état des tâches ne correspond pas à celui attendu, il va communiquer les informations nécessaires à l'executor pour tendre vers le bon état.
@@ -367,15 +367,18 @@ L'architecture de Mesos est donc similaire à celle de Kubernetes. Cependant, Me
 \section{Quels besoin de sécurité ?}
 Dans le cadre d'une architecture conteneurisée il faut également mettre en place des mécanismes de sécurité. Dans le cadre de la plateforme innovation, deux critères sont importants à conserver : la disponibilité et le traçage. La confidentialité et l'intégrité n'est pour le moment pas du tout garantie. En effet cette plateforme reste tout de même une plateforme de "tests".\\
 
-La disponibilité de la plateforme de l’innovation est un sujet très important. En effet, chaque jours plusieurs dizaine de service à la demande et d’environnement de tests sont créés. Si l’orchestrateur qui gère l’ensemble de ces tâches venait à tomber, c’est plusieurs centaine de personnes qui serait donc pénalisées. La disponibilité des services est donc primordiale. Pour garantir une disponibilité optimale, il faut tout d’abord pouvoir identifier les risques pouvant la réduire : perte de node, redémarrage d’un conteneur, plus assez de ressources, etc... \\
+La disponibilité de la plateforme de l’innovation est un sujet très important. En effet, chaque jours plusieurs dizaine de services à la demande et d’environnements de tests sont crées. Si l’orchestrateur qui gère l’ensemble de ces tâches venait à tomber, c’est plusieurs centaines de personnes qui seraient donc pénalisées. La disponibilité des services est donc primordiale. Pour garantir une disponibilité optimale, il faut tout d’abord pouvoir identifier les risques pouvant la réduire : perte de node, redémarrage d’un conteneur, manques de ressources, etc... \\
 
-Afin de se prémunir de certains problèmes il est important de disposer d’outils de surveillance au sein du cluster. En plus des outils natifs proposé par DC/OS ou par Kubernetes (les différents dashboards).\\
+Afin de se prémunir de certains problèmes il est important de disposer d’outils de surveillance au sein du cluster. En plus des outils natifs proposé par DC/OS ou par Kubernetes (les différents dashboards), on retrouve des outils externes disponibles sur les 2 orchestrateurs.\\
 
 Les 2 orchestrateurs permettent de déployer facilement l'outil Prometheus et Grafana. Cet outil va permettre d'agréger l'ensemble des métriques disponibles dans le cluster au même endroits. 
 
-Ce même outil permet de réaliser de la tracabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Hormis les outils de monitoring tel que les dashboard admin ou Prometheus Grafana, il existe des outils, (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émisent par l’utilisateur.\\
+Ce même outil permet de réaliser de la traçabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Hormis les outils de monitoring tel que les dashboards ou Prometheus Grafana, il existe des outils, (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émisent par l’utilisateur.\\
 
-La CNCF\footnote{Cloud Native Computing Foundation} recommande l’utilisation de l’outil Jaeger afin de réaliser du tracing au sein d’une architecture conteneurisée. Le tracing permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement
+La CNCF\footnote{Cloud Native Computing Foundation} recommande l’utilisation de l’outil Jaeger afin de réaliser du traçage au sein d’une architecture conteneurisée. Le traçage permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement.\\
+
+L'annexe \ref{securite} propose des informations complémentaire sur les sources de failles de sécurité dans un cluster, un zoom sur le fonctionnement de Prometheus-Grafana, et quelques proposition de pratiques plus ou moins simple à mettre en place afin de garantir une sécurité optimale. 
+
 
 \chapterimage{chapter-image/deployer-01.jpg} 
 \chapter{Déployer une application}
@@ -407,7 +410,7 @@ Télechargement de ressources & Balise Fetch   & InitContainer   \\
 Stockage                     & Balise Stockage & VolumeClaim     \\
 Communiquer & DC/OS cli ou REST & kubectl cli\bottomrule
 \end{tabular}
-\caption{Tableau Récapitulatif des points communs et différences entre déploiement Marathon et Kubernetes}
+\caption{Tableau Récapitulatif des fonctionnalités communes et différentes entre Marathon et Kubernetes dans le cadre du déploiement d'une application}
 \label{tab:my-table}
 \end{figure}
 
@@ -471,28 +474,28 @@ Helm est un projet opensource créé en 2015. C'est le gestionnaire de paquets r
 Helm est un SDK (Software Development Kit, un ensemble d’outils d’aide à la programmation) qui se découpe en 2 parties: 
 \begin{itemize}
     \item Le client Helm est une ligne de commande pour l'utilisateur. La ligne de commande permet d'installer ou désinstaller des applications, d'installer automatiquement des dépendances applicatives, de mettre à jour des applications, de configurer des déploiements d'application, de récupérer des paquets d'application dans des dépôts, et enfin de communiquer avec la librairie Helm.
-    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des charts pour créer des releases. C'est également elle qui implémente la logique de montée de version (rolling-update) ou de désinstallation des releases.
+    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des Charts pour créer des releases. C'est également elle qui implémente la logique de montée de version (rolling-update) ou de désinstallation des releases.
 \end{itemize}
 
-Helm s'accompagne de 3 concepts : les charts, la config et la release. Nous allons parcourir ces différentes notions.
+Helm s'accompagne de 3 concepts : les Charts, la config et la release. Nous allons parcourir ces différentes notions.
 
 \subsubsection{Charts}
-Les packages Helm sont appelés des charts et sont composés de plusieurs fichiers de configurations yaml (qui sont principalement des templates) et qui seront convertis en fichiers yaml compréhensible par Kubernetes grâce à la librairie Helm. La structure d'un chart est la suivante :
+Les packages Helm sont appelés des Charts et sont composés de plusieurs fichiers de configurations yaml (qui sont principalement des templates) et qui seront convertis en fichiers yaml compréhensible par Kubernetes grâce à la librairie Helm. La structure d'un Chart est la suivante :
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Tableau}
 \includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/helmChart.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Aperçu des fichiers composant un chart \newline}
+\caption[]{Aperçu des fichiers composant un Chart \newline}
 \end{figure}
 
 \begin{itemize}
         \item charts/ : Les dépendances gérées manuellement peuvent être placées dans ce répertoire, bien qu'il soit généralement préférable d'utiliser dependencies dans Chart.yaml pour lier dynamiquement les dépendances.
         \item templates/ : Ce répertoire contient des fichiers templates qui vont être combinés avec des valeurs de configuration (provenant de values.yaml et de la ligne de commande) et rendus dans des manifestes Kubernetes. Ils contiennent en général au moins l'équivalent des trois fichiers basiques de Kubernetes : ingress, service et deployment. Les modèles utilisent le format de template du langage de programmation Go.
-        \item Chart.yaml : Un fichier yaml contenant des métadonnées sur le chart, telles que le nom et la version du chart, des informations sur le créateur, un site web pertinent et des mots-clés de recherche, les dépendances du chart.
-      \item LICENCE : Une licence en texte clair pour le chart.
-     \item README.md : Un fichier readme avec des informations pour les utilisateurs du chart.
-      \item values.yaml : Un fichier YAML contenant les valeurs de configuration par défaut du chart.\newline
+        \item Chart.yaml : Un fichier yaml contenant des métadonnées sur le Chart, telles que le nom et la version du Chart, des informations sur le créateur, un site web pertinent et des mots-clés de recherche, les dépendances du Chart.
+      \item LICENCE : Une licence en texte clair pour le Chart.
+     \item README.md : Un fichier readme avec des informations pour les utilisateurs du Chart.
+      \item values.yaml : Un fichier YAML contenant les valeurs de configuration par défaut du Chart.\newline
         \begin{figure}[H]\centering
         \renewcommand{\figurename}{Tableau}
         \includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/values.png}
@@ -500,10 +503,10 @@ Les packages Helm sont appelés des charts et sont composés de plusieurs fichie
         \caption[]{Exemple de fichier values.yaml \newline}
         \end{figure}
 \end{itemize} 
-L'ensemble des charts est ensuite placé dans un Helm repository. Un Helm repository est un site HTTP qui délivre un fichier index.yaml et des charts packagées. Ces fichiers peuvent être servis par n'importe quel serveur web, service de stockage d'objets ou un hôte de site statique tel que les pages GitHub(par exemple \url{https://inseefrlab.github.io/helm-charts-datascience/index.yaml}.
+L'ensemble des Charts est ensuite placé dans un Helm repository. Un Helm repository est un site HTTP qui délivre un fichier index.yaml et des Charts packagées. Ces fichiers peuvent être servis par n'importe quel serveur web, service de stockage d'objets ou un hôte de site statique tel que les pages GitHub(par exemple \url{https://inseefrlab.github.io/helm-charts-datascience/index.yaml}.
 
 \subsubsection{Config et Release}
-Helm permet de surcharger la configuration par défaut fourni avec un chart. Cette surcharge peut s'effectuer de deux manières distinctes :
+Helm permet de surcharger la configuration par défaut fourni avec un Chart. Cette surcharge peut s'effectuer de deux manières distinctes :
 \begin{itemize}
     \item Par le biais d'un fichier values.yaml: l'utilisateur crée un fichier contenant les valeurs qu'il souhaite surcharger par rapport à la configuration par défaut. Par exemple, si l'on reprend le fichier values.yaml ci-dessus, si l'utilisateur souhaite activer l'ingress, il aura juste à créer un fichier de la forme suivante : 
         \begin{figure}[H]\centering
@@ -512,23 +515,23 @@ Helm permet de surcharger la configuration par défaut fourni avec un chart. Cet
         \captionsetup{margin=1.5cm,format=hang,justification=justified}
         \caption[]{Exemple de fichier my-values.yaml \newline}
         \end{figure}
-    Il lui suffit alors de le préciser lors de l'installation du chart \textit{Helm install chart mychart -f my-values.yaml}
+    Il lui suffit alors de le préciser lors de l'installation du Chart \textit{Helm install chart mychart -f my-values.yaml}
     \item L'utilisateur peut également surcharger les valeurs de déploiement directement depuis la ligne de commande. On aurait donc (pour le même exemple que ci dessus) \textit{Helm install chart mychart --set ingress.enabled=true}.
     \item Enfin on peut également combiner les deux. \textit{Helm install chart mychart -f my-values.yaml --set ingress.enabled=true}.
 \end{itemize}
 
-Lorsque un chart est installé dans le cluster, on parle alors de release. Une release est une instance d'un chart exécuté dans un cluster Kubernetes. Un chart peut souvent être installé plusieurs fois dans le même cluster. Et chaque fois qu'il est installé, une nouvelle release est créée.
+Lorsque un Chart est installé dans le cluster, on parle alors de release. Une release est une instance d'un Chart exécuté dans un cluster Kubernetes. Un Chart peut souvent être installé plusieurs fois dans le même cluster. Et chaque fois qu'il est installé, une nouvelle release est créée.
 
 
 \begin{interrupt}
 \paragraph{Conclusion :}
 La différence entre Helm et Universe est frappante. En effet, Universe est un format de templating compris et développé par DC/OS pour DC/OS uniquement exécutable depuis l'interface admin de DC/OS (ou depuis la CLI mais c'est assez rare). Universe est donc assez peu propice à une utilisation massive par plusieurs utilisateurs. Les paquets Universes sont en général plutôt utilisés pour déployer des outils d'administration du cluster, ou pour déployer des applications en un seul exemplaire. \newline 
 
-Helm, quant à lui, est une CLI qui permet à la fois de déployer des charts dans Kubernetes mais aussi de lister les services déjà installés, de faire des upgrades, de créer des charts, etc. Et, comme Universe, c'est aussi un outil qui fournit son propre type de templating.\newline
+Helm, quant à lui, est une CLI qui permet à la fois de déployer des Charts dans Kubernetes mais aussi de lister les services déjà installés, de faire des montées de versions, de créer des Charts, etc. Et, comme Universe, c'est aussi un outil qui fournit son propre type de templating.\newline
 
-Mais, puisque Helm discute avec l'api-server de Kubernetes, il est très facile de faire une politique de gestion de droits, de restreindre un utilisateur à certains workspace, et donc d'avoir plusieurs instances du même chart qui s'exécutent au sein de mon cluster. Par ailleurs, Helm est le gestionnaire de packages recommandé par la Cloud Native Computing Foundation, ce qui lui vaut un certains succès. En effet, Helm propose plus de 1200 charts Helm (bien loin des 120 packages du répertoire DC/OS) qui sont référencés sur \url{https://hub.helm.sh/}. Ce hub contient l'ensemble des charts Helm considérés comme stables par Google. Mais il existe aussi de nombreux répertoires Helm alternatifs.\newline
+Mais, puisque Helm discute avec l'api-server de Kubernetes, il est très facile de faire une politique de gestion de droits, de restreindre un utilisateur à certains espace de travail, et donc d'avoir plusieurs instances du même Chart qui s'exécutent au sein de mon cluster. Par ailleurs, Helm est le gestionnaire de packages recommandé par la Cloud Native Computing Foundation, ce qui lui vaut un certains succès. En effet, Helm propose plus de 1200 Charts Helm (bien loin des 120 packages du répertoire DC/OS) qui sont référencés sur \url{https://hub.helm.sh/}. Ce hub contient l'ensemble des Charts Helm considérés comme stables par Google. Mais il existe aussi de nombreux répertoires Helm alternatifs.\newline
 
-Enfin, on pourrait reprocher à Helm de ne pas avoir d'interface graphique. Mais il existe un chart Helm Kubeapps(voir annexe \ref{kubeapps}), permettant de donner une interface graphique à Helm pour l'installation de nouveaux charts. 
+Enfin, on pourrait reprocher à Helm de ne pas avoir d'interface graphique. Mais il existe un Chart Helm Kubeapps(voir annexe \ref{kubeapps}), permettant de donner une interface graphique à Helm pour l'installation de nouveaux Charts. 
 \end{interrupt}
 
 
@@ -617,14 +620,14 @@ Les solutions ci-dessus sont majoritairement orientées Kubernetes. En effet, il
 \end{interrupt}
 \section{Argo: Vers une architecture conteneurisée en production}
 
-ArgoCD suit le modèle en pull GitOps, qui consiste à utiliser les dépôts Git comme source de vérité pour définir l'état d'application souhaité. C'est un projet relativement jeune (lancé en 2017) mais qui fait parti des outils recommandés par la CNCF dans sa carte de route pour concevoir une plateforme cloud \footnote{\url{https://github.com/cncf/trailmap/blob/master/CNCF_TrailMap_latest.pdf}}. C'est également l'outil utilisé par le Ministère de l'Intérieur pour la mise en place de sa plateforme Cloud. Kubernetes pour mettre en place du CI/CD avec un orchestrateur de conteneur. Argo possède son chart Helm qui lui permet d'être facilement déployable dans Kubernetes et il ne fonctionne qu'avec des ressources Kubernetes. Argo a été choisi pour la plateforme de l'innovation car il permet notamment l'authentification OIDC\footnote{Authentification de type open-id connect, authentification à jeton} et la gestion de droits et aussi car il propose une interface graphique. \newline
+ArgoCD suit le modèle en pull GitOps, qui consiste à utiliser les dépôts Git comme source de vérité pour définir l'état d'application souhaité. C'est un projet relativement jeune (lancé en 2017) mais qui fait parti des outils recommandés par la CNCF dans sa carte de route pour concevoir une plateforme cloud \footnote{\url{https://github.com/cncf/trailmap/blob/master/CNCF_TrailMap_latest.pdf}}. C'est également l'outil utilisé par le Ministère de l'Intérieur pour la mise en place de sa plateforme Cloud.  Argo possède son Chart Helm qui lui permet d'être facilement déployable dans Kubernetes et il ne fonctionne qu'avec des ressources Kubernetes. Argo a été choisi pour la plateforme de l'innovation car il permet notamment l'authentification OIDC\footnote{Authentification de type open-id connect, authentification à jeton} et la gestion de droits et aussi car il propose une interface graphique. \newline
 
-ArgoCD permet d'automatiser le déploiement d'application dans les environnements cibles spécifiés. ArgoCD est un contrôleur Kubernetes qui surveille en permanence les applications fonctionnant dans le cluster. Il les compare à l'état défini dans le dépôt Git. S'il détecte une déviation, il marque une application comme étant "OutOfSync"\footnote{Perte de la synchronisation} (indiquant que le cluster ne reflète pas actuellement la branche master du dépôt) et le cas échéant la resynchronise avec le répertoire Git.  ArgoCD est compatible avec plusieurs types de manifestes Kubernetes: des templates d'application avec kustomize, des charts Helm, des applications ksonnet, des fichiers jsonnet, ou encore directement des fichiers yaml.\newline
+ArgoCD permet d'automatiser le déploiement d'application dans les environnements cibles spécifiés. ArgoCD est un contrôleur Kubernetes qui surveille en permanence les applications fonctionnant dans le cluster. Il les compare à l'état défini dans le dépôt Git. S'il détecte une déviation, il marque une application comme étant "OutOfSync"\footnote{Perte de la synchronisation} (indiquant que le cluster ne reflète pas actuellement la branche master du dépôt) et le cas échéant la resynchronise avec le répertoire Git.  ArgoCD est compatible avec plusieurs types de manifestes Kubernetes: des templates d'application avec kustomize, des Charts Helm, des applications ksonnet, des fichiers jsonnet, ou encore directement des fichiers yaml.\newline
 
 
 
-ArgoCD propose plusieurs moyens pour communiquer avec lui : une interface, une ligne de commande (argoCD), il expose également une API compatible REST et gRPC\footnote{gRPC est un framework RPC (Remote procedure call) open source initialement développé par Google. Le RPC, Remote procedure call, est un protocole réseau permettant de faire des appels de procédures sur un ordinateur distant à l'aide d'un serveur d'applications.}. Il peut, dans le cas où l'on souhaite réduire le temps entre chaque synchronisation du répertoire Git, être configuré pour recevoir des notifications git. Par ailleurs, argoCD peut envoyer des notifications dans d'autres applications telles que Slack (pour par exemple avertir d'une montée de version ou qu'une application n'est plus synchronisée). Il est également capable de gérer l'état des applications dans plusieurs clusters Kubernetes en étant déployer dans un seul cluster.
-L'interface graphique d'argo permet notamment d'avoir une vue explosée de nos déploiement. Ci dessous, dans l'exemple d'Onyxia, on retrouve toutes les entités de Kubernetes : ingress, Pod, deployment, Service, role-binding,... On a également accès aux manisfestes, logs de chaque composant, historique de déploiement, ainsi que la possibilité de faire des rollbacks\footnote{retour sur une version précédente de l'application} en un clic.
+ArgoCD propose plusieurs moyens pour communiquer avec lui : une interface, une ligne de commande (argoCD), il expose également une API compatible REST et gRPC\footnote{gRPC est un framework RPC (Remote procedure call) open source initialement développé par Google. Le RPC, Remote procedure call, est un protocole réseau permettant de faire des appels de procédures sur un ordinateur distant à l'aide d'un serveur d'applications.}. Il peut, dans le cas où l'on souhaite réduire le temps entre chaque synchronisation du répertoire Git, être configuré pour recevoir des notifications git. Par ailleurs, argoCD peut envoyer des notifications dans d'autres applications telles que Slack (pour par exemple avertir d'une montée de version ou qu'une application n'est plus synchronisée). Il est également capable de gérer l'état des applications dans plusieurs clusters Kubernetes en étant déployé dans un seul cluster.
+L'interface graphique d'argo permet notamment d'avoir une vue explosée de nos déploiement. Ci contre, dans l'exemple d'Onyxia, on retrouve toutes les entités de Kubernetes : ingress, Pod, deployment, Service, role-binding,... On a également accès aux manisfestes, logs de chaque composant, historique de déploiement, ainsi que la possibilité de faire des rollbacks\footnote{retour sur une version précédente de l'application} en un clic.
 
 \begin{figure}[H]
 \renewcommand{\figurename}{Graphique}
@@ -653,20 +656,19 @@ L'interface graphique d'argo permet notamment d'avoir une vue explosée de nos d
 \end{interrupt}
 
 \section{Le GitOps: oui mais pour quel projet ?}
-Avant de se lancer dans le GitOps, il faut d'abord que notre projet réponde à certains critères. On parle alors d'application cloud-Native. La CNCF donne la définition suivante du cloud-native: \\
+Avant de se lancer dans le GitOps, il faut d'abord que notre projet réponde à certains critères. En effet, les problèmes les plus fréquents dans un cluster sont les suivants: \\
+\begin{itemize}
+    \item Le downtime : Si un conteneur (ou pire un worker-node) contenant une application dysfonctionne pour une raison quelconque, il faut que l'orchestrateur relance cette application. Durant ce laps de temps, l'application peut être indisponible. Un moyen de palier à ce problème est d'avoir plusieurs répliques de notre application répartis sur plusieurs nodes, pour qu'en cas de bug d'une des répliques, les autres prennent le relais. Il est donc interdit à l'application de posséder des données en local. \\
+    \item La surcharge : Il peut arriver que le cluster soit en surcharge : suite à la perte d'un node obligeant le déplacement des apps sur un autre node (pertes de ressources entraînant une surcharge), ou encore que l'ensemble des  applications consomme toutes les ressources disponibles. Pour cela on a deux solutions : prévoir large (c'est-à-dire surdimensionner le cluster mais cela entraîne une non utilisation des ressources) ou bien faire de l'autoscaling (c'est-à-dire laisser automatiquement le cluster démarrer des worker-nodes ou des conteneurs afin de répondre à la charge, le problème est que cela peut coûter cher). \footnote{C'est d'ailleurs à cause de cette raison que Amazon s'est initialement converti en fournisseur cloud : leur serveur était surchargé pendant certaines périodes de l'année (fêtes de fin d'année). Ils ont donc décidé de louer les ressources qu'ils n'utilisaient pas le reste de l'année, afin de rentabiliser leur infrastructure.}\\
+    \item La perte de donnée : de la même façon que précédemment, aucune donnée ne doit être attachée à un conteneur. Il faut donc, dans le cas du stockage de données (comme par exemple pour une base de données), avoir une certaine redondance des données et/ou pouvoir les externaliser. Les applications stateless ne possèdent aucune donnée en local, tout leur état étant déporté sur une autre application.\\
+\end{itemize}
+
+On a alors besoin d'avoir des applications cloud-Native. La CNCF donne la définition suivante du cloud-native: \\
 
 \textit{"Les technologies cloud-native permettent aux entreprises de construire et d'exploiter des applications élastiques dans des environnements modernes et dynamiques comme des clouds publics, privés ou bien hybrides. Les conteneurs, les services maillés, les micro services, les infrastructures immuables et les API REST illustrent cette approche. Ces techniques permettent la mise en œuvre de systèmes faiblement couplés, à la fois résistants, pilotables et observables. Combinés à un robuste système d'automatisation, ils permettent aux ingénieurs de procéder à des modifications impactantes, fréquemment et de façon prévisible avec un minimum de travail."} \\
 
-Il faut donc avoir des applications scalables et stateless. Selon une étude réalisée par Sysdig \footnote{\url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}, 25\% des conteneurs s'exécutant dans un cluster ont une durée de vie inférieure à 10 secondes. Une application monolithique qui stocke ses données en session n'est donc pas adaptée à un déploiement dans le cloud.  \\
+Le cloud impose donc de nouvelles manières de développer tel que les microservices, l'event sourcing, le nosql, l'utilisation d'api REST, etc. Les applications doivent être scalables et stateless. Selon une étude réalisée par Sysdig \footnote{\url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}, 25\% des conteneurs s'exécutant dans un cluster ont une durée de vie inférieure à 10 secondes. Une application monolithique qui stocke ses données en session n'est donc pas adaptée à un déploiement dans le cloud.  \\
 
-Par ailleurs, un cluster s'expose aux risques suivants: 
-\begin{itemize}
-    \item Le downtime : Si un conteneur (ou pire un worker-node) contenant une application dysfonctionne pour une raison quelconque, il faut que l'orchestrateur relance cette application. Durant ce laps de temps, l'application peut être indisponible. Un moyen de palier à ce problème est d'avoir plusieurs répliques de notre application répartis sur plusieurs nodes, pour qu'en cas de bug d'une des répliques, les autres prennent le relais. Il est donc interdit à l'application de posséder des données en local. 
-    \item La surcharge : Il peut arriver que le cluster soit en surcharge : suite à la perte d'un node obligeant le déplacement des apps sur un autre node (pertes de ressources entraînant une surcharge), ou encore que l'ensemble des  applications consomme toutes les ressources disponibles. Pour cela on a deux solutions : prévoir large (c'est-à-dire surdimensionner le cluster mais cela entraine une non utilisation des ressources) ou bien faire de l'autoscaling (c'est-à-dire laisser automatiquement le cluster démarrer des worker-nodes ou des conteneurs afin de répondre à la charge, le problème est que cela peut coûter cher). \footnote{C'est d'ailleurs à cause de cette raison que Amazon s'est initialement converti en fournisseur cloud : leur serveur était surchargé pendant certaines périodes de l'année (fêtes de fin d'année). Ils ont donc décidé de louer les ressources qu'ils n'utilisaient pas le reste de l'année, afin de rentabiliser leur infrastructure.}
-    \item La perte de donnée : de la même façon que précédemment, aucune donnée ne doit être attachée à un conteneur. Il faut donc, dans le cas du stockage de données (comme par exemple pour une base de données), avoir une certaine redondance des données et/ou pouvoir les externaliser. Les applications stateless ne possèdent aucune donnée en local, tout leur état étant déporté sur une autre application.
-\end{itemize}
-
-Le cloud impose donc de nouvelles manières de développer tel que les microservices, l'event sourcing, le nosql, le stateless, le rest, etc.
 
 
 \chapterimage{/chapter-image/onyxia.png}
@@ -674,10 +676,10 @@ Le cloud impose donc de nouvelles manières de développer tel que les microserv
 \vspace{-2cm}
 Afin de mettre en place un DataLab, il peut être bénéfique de posséder une plateforme permettant de déployer des services de notre choix, de se former sur ce service, de pouvoir le jeter, de recommencer, tout cela rapidement et facilement. L'utilisation d'une architecture conteneurisée semble être la solution. Kubernetes propose une application Kubeapps ( voir annexe \ref{kubeapps}) mais elle ne propose pas l'auto-configuration des services. Cette solution n'est pas compatible avec Marathon pour qui il n'existe aucune autre solution similaire.\\
 
-Puisque le premier choix de l'Insee a été d'utiliser Marathon comme orchestrateur de conteneur, la Diit a développer une application, Onyxia, répondant au même besoin que kubeapps mais en rajoutant l'auto-configuration des services. Cette solution n'est  compatible qu'avec Marathon. Au cours de mon stage j'ai ajouté le support de kubernetes dans Onyxia. A partir de cette expérience, nous allons comparer ce que les deux orchestrateurs facilitent (ou pas) dans le cadre d'une utilisation pour du service à la demande.
+Puisque le premier choix de l'Insee a été d'utiliser Marathon comme orchestrateur de conteneur, la Diit a développer une application, Onyxia, répondant au même besoin que kubeapps mais en rajoutant l'auto-configuration des services. Cette solution n'est  compatible qu'avec Marathon. Au cours de mon stage j'ai ajouté le support de Kubernetes dans Onyxia. A partir de cette expérience, nous allons comparer ce que les deux orchestrateurs facilitent (ou pas) dans le cadre d'une utilisation pour du service à la demande.
 
 \section{Fonctionnement d'Onyxia}
-Onyxia est une application composée de deux parties : Onyxia-api (une API java pour les traitements) et Onyxia-ui (une interface React pour interagir avec l'utilisateur). Onyxia est une application que l'on qualifie de cloud-native, elle respecte l'architecture micro-service, elle repose sur une API rest et elle s'exécute dans des conteneurs. Elle est aussi stateless\footnote{Une application Stateless est une application qui ne sauvegarde pas les données de l'utilisateur générées lors d'une session pour les utiliser lors de la session suivante avec cet utilisateur.} et scalable\footnote{Désigne la capacité d'un produit à s'adapter à un changement d'ordre de grandeur de la demande (montée en charge)}.\\
+Onyxia est une application composée de deux parties : Onyxia-api (une API java pour les traitements) et Onyxia-ui (une interface React pour interagir avec l'utilisateur). Onyxia est une application que l'on qualifie de cloud-native, elle respecte l'architecture micro-service, elle repose sur une API RESTet elle s'exécute dans des conteneurs. Elle est aussi stateless\footnote{Une application Stateless est une application qui ne sauvegarde pas les données de l'utilisateur générées lors d'une session pour les utiliser lors de la session suivante avec cet utilisateur.} et scalable\footnote{Désigne la capacité d'un produit à s'adapter à un changement d'ordre de grandeur de la demande (montée en charge)}.\\
 
 
 L'application permet à l'utilisateur non connecté (non authentifié par l'application) d'accéder aux autres services proposés par l'innovation, on citera notamment rocket-chat (messagerie instantanée), minIO (stockage), Gitlab... L'utilisateur non connecté peut également consulter les catalogues de services à la demande que proposent Onyxia. L'utilisateur connecté peut lancer un service à la demande, le configurer (par exemple lancer un vs-code préconfigurer pour faire du python). Cet utilisateur peut aussi stocker des données. Onyxia s'interface avec minIO pour y uploader les données de l'utilisateur.\\
@@ -713,7 +715,7 @@ Ce workflow est pour le moment uniquement réalisable avec Marathon. Au cours de
 
 
 \section{Onyxia : Marathon et/ou Kubernetes ?}
-Nous ne traiterons pas des solutions techniques mises en place (car elles n'ont pas grand intérêt) mais plutôt des points communs entre les deux solutions et des difficultés rencontrées, au cours de l'implémentation de Kubernetes dans Onyxia. Dans un premier temps, nous avions évoqué d'interfacer Onyxia avec Kubeapps un chart Helm permettant de déployer des charts Helm dans un cluster kubernetes (voir en annexe \ref{kubeapps} pour plus de détails), mais la solution n'a finalement pas été retenue.\newline
+Nous ne traiterons pas des solutions techniques mises en place (car elles n'ont pas grand intérêt) mais plutôt des points communs entre les deux solutions et des difficultés rencontrées, au cours de l'implémentation de Kubernetes dans Onyxia. Dans un premier temps, nous avions évoqué d'interfacer Onyxia avec Kubeapps un Chart Helm permettant de déployer des Charts Helm dans un cluster Kubernetes (voir en annexe \ref{kubeapps} pour plus de détails), mais la solution n'a finalement pas été retenue.\newline
 
 Nous avons choisi l'outil Helm pour être l'équivalent de Universe dans le cadre de Kubernetes.
 \subsection{Phase 1: Afficher des catalogues}
@@ -798,8 +800,8 @@ resource         &                          & x                            & Con
 \end{table}
 
 
-Pour avoir le même comportement (entre Helm et Universe), pour chaque Chart nous téléchargeons le fichier tgz du chart (à partir de l'URL) et nous y récupérons le fichier de configuration. Ainsi, chaque paquet (Universe ou Helm) a au moins un nom, une description, une version et un fichier de configuration par défaut. Pour un paquet Universe nous stockons en plus le template de l'application. Cette étape n'est pas nécéssaire pour un chart Helm, nous ajoutons juste le chart a ceux connu par Helm (\textit{helm repo add...}).
-
+Pour avoir le même comportement (entre Helm et Universe), pour chaque Chart nous téléchargeons le fichier tgz du Chart (à partir de l'URL) et nous y récupérons le fichier de configuration. Ainsi, chaque paquet (Universe ou Helm) a au moins un nom, une description, une version et un fichier de configuration par défaut. Pour un paquet Universe nous stockons en plus le template de l'application. Cette étape n'est pas nécéssaire pour un Chart Helm, nous ajoutons juste le Chart a ceux connu par Helm (\textit{helm repo add...}).
+\vspace{-0.5cm}
 \begin{interrupt}
 Un répertoire Helm ou Universe est vu comme un catalogue. Chacun de ces catalogues est composé de paquets qui peuvent être soit des Charts (Helm) ou des UniversePackages (Universe). Un paquet est au moins caractérisé par un nom, une description, une version et un fichier de configuration auquel s'ajoutent des informations appartenant à l'un ou l'autre des deux types de paquets.
 \end{interrupt}
@@ -808,6 +810,7 @@ Un répertoire Helm ou Universe est vu comme un catalogue. Chacun de ces catalog
 \includegraphics[scale=0.6]{Pictures/onyxia/workflow-catalog.png}
 \caption{Workflow lecture et ajout de catalogues \newline}
 \end{wrapfigure}
+\vspace{-0.5cm}
 L'ensemble des catalogues proposé par Onyxia est décrit dans un fichier json. Ce fichier comporte notamment le type du catalogue (Universe ou Helm) et l'URL sur lequel se trouve le fichier décrivant le catalogue (respectivement le universe.json ou le index.yaml). Le workflow ci-contre s'exécute alors périodiquement afin d'ajouter les différents paquets dans Onyxia.
 
 \subsubsection{Difficultés rencontrées}
@@ -870,29 +873,27 @@ Par ailleurs, le comportement de Helm n'est pas le même que Marathon lorsqu'on 
 \chapterimage{/chapter-image/conclusion.png}
 \chapter{Conclusion}
 \vspace{-2cm}
+
 Après l'analyse des besoins d'intégration et de déploiement en continu pour les développeurs, et de service à la demande pour les statisticiens, la nécessite de posséder une architecture dite conteneurisée à l'Insee semble évidente. \newline
 
 De nombreuses solutions existent sur le marché, mais 2 auront retenue notre attention, Kubernetes et Mesos/Marathon. Le premier car c'est actuellement le leader mondial dans ce domaine, le deuxième puisque c'est la solution actuellement en place à l'Insee. \newline
 
-Ces 2 orchestrateurs de conteneurs ont un fonctionnement relativement proche et l'utilisateur final ne remarquera pas la différence entre l'une ou l'autre des solutions. Ils se distinguent cependant sur les extensions qui les accompagnent. \newline
+Ce stage a été l'occasion de comparer leur architecture et de s'approprier leur fonctionnement. Kubernetes semble s'imposer comme la solution à retenir pour la mise en place d'une potentielle future architecture conteneurisée en production.\newline
 
-En effet, Mesos/Marathon propose des librairies afin de faciliter la communication entre nos applications et marathon, et l'utilisation du format de templating utilisé par marathon est facile à prendre en main et à utiliser depuis une application tierce.\newline
+Ce stage a également mis en avant, pour les développeurs, l'importance  de savoir créer et utiliser des images Docker, puisqu'ils sont la base d'une architecture conteneurisée.\\
 
-Même si Kubernetes, propose lui aussi des librairies pour communiquer avec le cluster, le gestionnaire de paquet Helm n'est pas encore bien intégré avec les applications externes\footnote{cela est vrai notamment pour du java, un peu moins lorsque l'on parle d'application écrite en GO}, ce qui oblige le développeur a l'implémenter au sein de son application. Ce désavantage est cependant compensé par la variété de contenu mis à la disposition du développeur: extensions, tutoriel, documentation,... qui vont grandement l'aider. \newline
+Enfin, mes recherches dans le cadre de l'intégration continue, m'ont conduit a découvrir des outils (Argo), encore jamais utilisé à l'Insee, et qui facilite l'exploitation des conteneurs. Ces recherches ont sensibilisé, je pense, le public sur l'importance des travaux qu'il reste encore à réalisé à l'Insee afin de mettre en place de "vrais" processus d'intégration continue.\\
 
-Par ailleurs, Helm permet a Kubernetes de posséder un gestionnaire de paquet bien plus performant et plus diversifié que celui de DC/OS (le propriétaire de Mesos/Marathon).\newline
+L'ensemble des travaux réalisés sur Onyxia présente de multiples intérêts : indépendance de DC/OS, ajout de fonctionnalités augmentant la disponibilité de l'application, et surtout l'application est désormais open-source. L'ajout du support de Kubernetes lui procure également une meilleure visibilité.\\
 
-Enfin, dans le cadre de l'intégration continue, Kubernetes surpasse Mesos/marathon. En effet les applications actuelles orientée dev-ops, GitOps, CI/CD sont quasiment toutes orientées pour fonctionner avec Kubernetes.\newline
 
-L'ensemble des travaux réalisés ont permis de rendre Onyxia compatible avec l'orchestrateur de conteneurs Kubernetes et de le faire interagir avec plusieurs orchestrateurs en même temps, ce qui permet désormais de fournir une meilleure disponibilité de service. Enfin les travaux sur l'intégration continue ont permis de sensibiliser le public sur la nécessité de disposer d'une telle solution à l'Insee.\newline
+En effet, l'Insee peut désormais proposer aux autres établissements du ministère des Finances une solution pour se créer un cloud spécialisé dans les outils et techniques de traitement de données. De plus, cette solution est à l’état de l’art, accessible à un public varié, 100\% gratuite et opensource.\\
 
-La migration d'Onyxia vers Kubernetes permet à l'Insee de ne plus être dépendante de DC/OS. En effet, nous sommes désormais capable de monter une deuxième plateforme de l'innovation sans ces outils. Cette migration a également permis de moderniser, de rendre open-source et rajouter des fonctionnalités à Onyxia : le support de Kubernetes, mais aussi le cloudshell \footnote{Un shell directement accessible dans Onyxia et permettant de dialoguer directement avec le cluster et/ou les différents services tels que Git, minIO, Vault.}, ou encore le multi-régions \footnote{Initialement, Onyxia ne pouvait déployer que dans un seul orchestrateur. Désormais, l'utilisateur peut déployer des applications dans plusieurs lieux (et donc différents orchestrateurs) qu'il peut choisir depuis Onyxia.}. Ces travaux permettront également d'améliorer sa disponibilité puisque plusieurs centre Insee peuvent désormais facilement déployer et héberger leur Onyxia.\\
+Elle a d'ailleurs été utilisé par la communauté spyrale (une communauté d'agents de l'Etat) qui durant la période de confinement, a proposé aux agents intéressés de les accompagner dans un parcours de formation. Cette plateforme permet donc de rendre les techniques modernes plus accessibles et de mutualiser les efforts pour répondre aux défis actuels de la statistique publique.\\
 
-Cette migration permet également de proposer aux autres établissements du ministère des Finances une solution pour se créer un cloud spécialisé dans les outils et techniques de traitement de données, à l’état de l’art et accessible à un public varié 100\% gratuite et opensource. Cette solution a d'ailleurs été utilisé par la communauté spyrale (une communauté d'agent de l'état) qui durant la  période de confinement, ont proposé aux agents intéressés de les accompagner dans un parcours de formation. Onyxia a été la plateforme utilisée. Cette plateforme permet donc de rendre les techniques modernes plus accessibles et de mutualiser les efforts pour répondre aux défis actuels de la statistique publique.
 
-Par ailleurs, Il serait également intéressant de comparer ce que les deux orchestrateurs proposent pour du machine learning. En effet, Kubernetes propose des solutions telle que  kubeflow ou encore argoworkflow, alors que Marathon propose des solutions basé sur Spark, ou Hadoop ou encore TFMesos (Un scheduleur qui aide à exécuter des tâches de machine learning Tensorflow distribuées avec le support de GPU). Ces solutions pouvant être intéressante pour le SspLab\footnote{Division innovation mais orientée statistique et traitement des données}.\newline
 
-Plus personnellement, ce stage m'aura permis de découvrir plus en profondeur le cloud et ses usages, et de monter en compétence sur des domaines très prisés actuellement. Ce stage m'a également appris a m'adapter rapidement, en effet le confinement m'ayant privé des ressources interne de l'Insee (dans un soucis d'économie des ressources le cluster kubernetes interne a été débranché), il a fallu que je m'adapte rapidement.
+% Plus personnellement, ce stage m'aura permis de découvrir plus en profondeur le cloud et ses usages, et de monter en compétence sur des domaines très prisés actuellement. Ce stage m'a également appris a m'adapter rapidement, en effet le confinement m'ayant privé des ressources interne de l'Insee (dans un soucis d'économie des ressources le cluster REST interne a été débranché), il a fallu que je m'adapte rapidement.
 \appendix
 
 
@@ -942,7 +943,7 @@ Par ailleurs, il peut être intéressant d'automatiser la phase de création d'u
 \label{A}
 \vspace{-2cm}
 \section*{Marathon: le endpoint /v2/deployments}
-Il faut savoir que un déploiement dans marathon ce fait par l'intermédiaire d'un fichier JSON décrivant l'état souhaité du déploiement. Nous allons partir de l'exemple ci dessus qui permet de déployer dans marathon un vs-code permettant de faire du python.
+Il faut savoir que un déploiement dans Marathon ce fait par l'intermédiaire d'un fichier JSON décrivant l'état souhaité du déploiement. Nous allons partir de l'exemple ci dessus qui permet de déployer dans Marathon un vs-code permettant de faire du python.
 \usemintedstyle{friendly}
 \begin{minted}[mathescape,
                linenos,
@@ -1003,10 +1004,10 @@ Si on découpe le contrat ci dessus on a les parties suivantes :
     \item id : l'id corresponds au dossier (virtuel) auquel va être rattaché le conteneur. Cela permet d'isoler les ressources entre utilisateur.
     \item container : Ici on déclare l'image que l'on va vouloir déployer
     \item env : Cette balise permet d'ajouter des variables d'environnement directement disponible au sein du conteneur. Ici on injecte la conf git de l'utilisateur   
-    \item labels : Dans marathon, la configuration du reverse proxy se fait par l'intermédiaire des labels. Il a été choisit d'utiliser HA\_PROXY. Ce dernier scanne l'ensemble des déploiements dans marathon en continue. Lorsqu'il trouve l'annotation HAPROXY\_0\_VHOST il sait qu'il va devoir exposer ce déploiement, il ajoute alors ce conteneur à sa table de déploiement ce qui lui permettra de faire le mapping entre l'url demandé et le service correspondant lorsqu'une requête demandant l'accès a ce service
+    \item labels : Dans Marathon, la configuration du reverse proxy se fait par l'intermédiaire des labels. Il a été choisit d'utiliser HA\_PROXY. Ce dernier scanne l'ensemble des déploiements dans Marathon en continue. Lorsqu'il trouve l'annotation HAPROXY\_0\_VHOST il sait qu'il va devoir exposer ce déploiement, il ajoute alors ce conteneur à sa table de déploiement ce qui lui permettra de faire le mapping entre l'url demandé et le service correspondant lorsqu'une requête demandant l'accès a ce service
     arrivera.   
     \item instance: le nombre de réplique l'on veut du service.
-    \item fetch: cette partie indique a marathon d'aller télécharger le fichier correspondant et de l'ajouter à la mesos-sandbox (un espace de stockage accessible a ce conteneur).
+    \item fetch: cette partie indique a Marathon d'aller télécharger le fichier correspondant et de l'ajouter à la mesos-sandbox (un espace de stockage accessible a ce conteneur).
 \end{itemize}
 \section*{Kubernetes : le trio ingress.yaml, service.yaml, deploiement.yaml}
 
@@ -1071,7 +1072,7 @@ On retrouve les informations intéressantes suivantes:
     \item le champ image qui corresponds à l'image docker que nous allons déployer dans Kubernetes.
     \item le champs env qui va nous permettre de passer des variables d'environnement au conteneur.
     \item le champs volume permet de déclarer un volume et le type de ce dernier. Ce volume sera ensuite attaché aux conteneurs avec l'entrée volumemounts.
-    \item le champs init container. Un init container est un conteneur qui s'executent avant notre déploiement afin de réaliser une certaine tache. Ici on va récuperer le fichier avec un wget et on le place dans un repertoire qui sera commun avec le conteneur que l'on veut déployer. Un init container pourrait très bien servir à requêter une api, ou à faire des tests sur l'existence d'un autre conteneur avant de démarrer.
+    \item le champs init container. Un init container est un conteneur qui s'executent avant notre déploiement afin de réaliser une certaine tache. Ici on va récuperer le fichier avec un wget et on le place dans un repertoire qui sera commun avec le conteneur que l'on veut déployer. Un init container pourrait très bien servir à requêter une API, ou à faire des tests sur l'existence d'un autre conteneur avant de démarrer.
     \item les autres champs sont essentiellement des champs qui serviront a Kubernetes comme identifiant.\\
 \end{itemize}
 
@@ -1162,7 +1163,7 @@ Quelques informations importantes :
 
 Désormais en se rendant sur l'url : \texttt{amodifier.portail.innovation.insee.eu} on accède à notre application. Ici nous venons de déployer une application simple et nous avons déjà 3 fichiers de configurations.\newline
 
-On remarque donc que pour faire le même déploiement la syntaxe entre les deux orchestrateurs est nettement plus lourde pour Kubernetes que pour marathon. Cette complexité présente tout de même l'avantage d'amener de nombreuses nouvelles fonctionnalités
+On remarque donc que pour faire le même déploiement la syntaxe entre les deux orchestrateurs est nettement plus lourde pour Kubernetes que pour Marathon. Cette complexité présente tout de même l'avantage d'amener de nombreuses nouvelles fonctionnalités
 
 
 \section*{Migrer facilement des tâches Marathon vers des jobs Kubernetes}
@@ -1173,7 +1174,7 @@ Pour les applications possédant un contrat Marathon fixe et qui est exécuté c
 
 Actuellement, l'application est capable de convertir un contrat Marathon contenant une ou plusieurs applications, en ajoutant les limites de ressources, les ingress, et en injectant les configurations nécessaires. Cependant, deux fonctionnalités restent à développer. En effet, les contrats Marathon disposent d'une partie fetch qui permet notamment de télécharger des ressources et les place dans la "sandbox", un dossier accessible par tous les conteneurs du contrat. Cette notion de fetch n'existe pas directement dans Kubernetes, il faut créer des init-containers, des conteneurs qui s'exécuteront avant notre conteneur contenant l'application. Une autre fonctionnalité est le fait de pouvoir convertir un groupe d'applications comme par exemple la brique ELK (ElasticSearch, Logstash, Kibana).\newline
 
-Le but originel de ce projet était de pouvoir convertir un contrat Marathon en contrat Kubernetes à la volée dans Onyxia, afin de pouvoir migrer rapidement des déploiement marathon vers Kubernetes afin de tester si le cluster Kubernetes interne supportait ou non la charge. Nous n'avons donc pas poussé l'implémentation plus loin, cependant ce projet est utilisable en l'état.
+Le but originel de ce projet était de pouvoir convertir un contrat Marathon en contrat Kubernetes à la volée dans Onyxia, afin de pouvoir migrer rapidement des déploiement Marathon vers Kubernetes afin de tester si le cluster Kubernetes interne supportait ou non la charge. Nous n'avons donc pas poussé l'implémentation plus loin, cependant ce projet est utilisable en l'état.
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Tableau}
 \includegraphics[scale=0.6]{Pictures/CI-CD/marathon-to-kub.PNG}
@@ -1240,7 +1241,7 @@ Prometheus récupère toutes les métriques présentent dans le cluster dans leq
 
 Ensuite il suffit d'interfacer Grafana avec Prometheus. Grafana peut s'interfacer avec plusieurs datasource (Google Cloud Monitoring, Azure monitor,...) dont Prometheus. Il faut ensuite mettre en forme les données récupérées sous forme de dashboard. On peut soit créer les dashboard soit même, soit en récupérer des déja fait par la communauté ici: \url{https://grafana.com/grafana/dashboards}.\newline 
 
-Prometheus et Grafana s'installent facilement dans Marathon et ou Kubernetes. En effet, pour Marathon les deux sont disponible dans les paquets universes officiel, et pour Kubernetes plusieurs charts Helm facilitent leur installation.
+Prometheus et Grafana s'installent facilement dans Marathon et ou Kubernetes. En effet, pour Marathon les deux sont disponible dans les paquets universes officiel, et pour Kubernetes plusieurs Charts Helm facilitent leur installation.
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Tableau}
@@ -1268,7 +1269,7 @@ La plateforme de l'innovation est une plateforme de tests, l'intégrité des don
 Afin de respecter le critère de l'intégrité il est important que tout ce qui s'exécute dans le cluster bénéficie de sauvegarde externe (pour les données des applications) et de redondance (à la fois pour les applications que pour les machines). Kubernetes permet par exemple de pouvoir créer des espaces de stockages qui peuvent être attaché au pods (donc volatile), dans des services de stockages externes (minIO), ou bien des espaces de stockages au sein de provider cloud (azure, aws, etc...). Marathon lui ne créé que des volumes de stockages propre a un node, une sauvegarde manuelle des espaces de stockages doit être faite afin de préserver les données en cas de pannes. 
 
 \subsection*{Mise en place de gestion de droits et d'authentification}
-Kubernetes comme marathon permette chacun une authentification afin de pouvoir accéder au ressource et d'en limiter les accès. Marathon comme kubernetes peuvent reposer sur de l'authentification OIDC (authentification à jeton). \newline
+Kubernetes comme Marathon permette chacun une authentification afin de pouvoir accéder au ressource et d'en limiter les accès. Marathon comme REST peuvent reposer sur de l'authentification OIDC (authentification à jeton). \newline
 
 Cette authentification permet de mettre en place des mécanismes de réduction de droits, un utilisateur ne pouvant consulter les déploiements que d'un seul dossier ou namespace.\newline
 
@@ -1281,7 +1282,7 @@ Chacun des composants du cluster doit toujours être maintenu dans sa version la
 \subsection*{Vérifier ses sources}
 Afin d'éviter la présence de faille au niveau de l'OS image (image qui sert de base à la création du conteneur), on peut par exemple mettre en place un registry Docker dit de confiance (On peut pour cela utiliser Harbor\footnote{un registre d'image docker, open source, qui sécurise les images grâce à des politiques et un contrôle d'accès basé sur les rôles, et qui garantit que les images soit exemptes de vulnérabilités, et qui signe les images comme étant de confiance}). C'est à dire qui contiendra uniquement des images qui auront été jugées sûres.\newline
 
-Kubernetes (par rapport a marathon) permet, par l'intermédiaire d'OPA (open policy agent), de mettre en place des règles de sécurité au sein du cluster. On pourra notamment mettre en place une règle qui limite l'utilisation des images venant de certains répertoires.
+Kubernetes (par rapport a Marathon) permet, par l'intermédiaire d'OPA (open policy agent), de mettre en place des règles de sécurité au sein du cluster. On pourra notamment mettre en place une règle qui limite l'utilisation des images venant de certains répertoires.
 
 
 
@@ -1310,7 +1311,7 @@ Afin de répondre à ce besoin je me suis orienté vers Gcloud. Google Cloud est
 
 On peut interagir avec Gcloud depuis l'interface prévu a cet effet ici \url{https://console.cloud.google.com/} ou bien par l'intermédiaire d'une CLI.\newline
 
-Parmi les services proposés, 3 ont été utilisés : Compute engine afin de créer une instance de VM ubuntu me servant de point d'entrée dans le cluster, Google kubernetes Engine pour créer un cluster kubernetes et Cloud Dns pour assurer le routage de l'ensemble des requêtes vers le cluster et le service correspondant (cela nécessite au préalable de bénéficier d'un nom de domaine et de certificats\footnote{En effet le proxy utilisé par l'Insee n'accepte pas les sites web dont le certificat n'a pas été signé par une AC (authorité de confiance) reconnue. Pour obtenir un certificat, j'ai utilisé Let's Encrypt.} valides).\newline
+Parmi les services proposés, 3 ont été utilisés : Compute engine afin de créer une instance de VM ubuntu me servant de point d'entrée dans le cluster, Google Kubernetes Engine pour créer un cluster Kubernetes et Cloud Dns pour assurer le routage de l'ensemble des requêtes vers le cluster et le service correspondant (cela nécessite au préalable de bénéficier d'un nom de domaine et de certificats\footnote{En effet le proxy utilisé par l'Insee n'accepte pas les sites web dont le certificat n'a pas été signé par une AC (authorité de confiance) reconnue. Pour obtenir un certificat, j'ai utilisé Let's Encrypt.} valides).\newline
 
 Google Kubernetes Engine (GKE) permet de créer des clusters Kubernetes en quelques clics: l'utilisateur choisit un nom pour son cluster, la région dans laquelle le cluster sera déployé , et le nombre et la puissance des worker-nodes. En quelques minutes le cluster est alors configuré par Google et prêt à recevoir les premières requêtes.\newline
 
@@ -1321,7 +1322,7 @@ Terraform est un outil d'infrastructure-as-code, open-source, et développé par
 
 Généralement, pour passer d'un état A à un état B, les outils semblables (tel que Chef ou Ansible) utilise un style de procédure où est décrit un code qui spécifie, étape par étape, comment atteindre un certain état final souhaité. Terraform (comme Puppet)  fonctionne différement, il repose sur un style plus déclaratif dans lequel un fichier contient le code qui spécifie l'état final souhaité. \newline
 
-Pour cela Terraform fonctionne en 3 phases. Dans la première phase (dite de code), le développeur décrit l'état souhaité de son cluster ou de sa VM au sein de un ou plusieurs fichiers. Dans un second temps (phase plan), Terraform va comparer l'état actuel du cluster avec celui décrit au sein des fichiers de la première phase. Enfin dans un dernier temps (phase apply), il va appliquer les changements au cluster afin de le faire tendre vers l'état désiré. Au cours de cette partie Terraform peut nous renvoyer des variables qu'il aura générée (le lien du kubernetes dashboard par exemple).\newline
+Pour cela Terraform fonctionne en 3 phases. Dans la première phase (dite de code), le développeur décrit l'état souhaité de son cluster ou de sa VM au sein de un ou plusieurs fichiers. Dans un second temps (phase plan), Terraform va comparer l'état actuel du cluster avec celui décrit au sein des fichiers de la première phase. Enfin dans un dernier temps (phase apply), il va appliquer les changements au cluster afin de le faire tendre vers l'état désiré. Au cours de cette partie Terraform peut nous renvoyer des variables qu'il aura générée (le lien du Kubernetes dashboard par exemple).\newline
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Tableau}
@@ -1340,7 +1341,7 @@ Grâce à Terraform nous avons pu écrire des scripts qui permettent de se crée
 \chapter{Kubeapps une alternative à Onyxia ?}
 \label{kubeapps}
 \vspace{-2cm}
-Dans le monde de kubernetes, il existe des applications permettant de simplifier le déploiement de charts Helm. On citera notamment Kubeapps ou encore Rancher. Kubeapps est un chart Helm qui permet de déployer une interface web permettant à son tour de déployer et de gérer des applications dans Kubernetes. Il permet d'ajouter des répertoires de chart Helm (aussi bien public que privé) et de les déployer dans le cluster. Kubeapps permet également de gèrer, monter les versions, et supprimer les applications actuellement déployées dans le cluster. Cette application supporte également l'authentification OIDC ce qui nous permet d'utiliser Keycloak comme provider d'authentification.
+Dans le monde de Kubernetes, il existe des applications permettant de simplifier le déploiement de Charts Helm. On citera notamment Kubeapps ou encore Rancher. Kubeapps est un Chart Helm qui permet de déployer une interface web permettant à son tour de déployer et de gérer des applications dans Kubernetes. Il permet d'ajouter des répertoires de Chart Helm (aussi bien public que privé) et de les déployer dans le cluster. Kubeapps permet également de gèrer, monter les versions, et supprimer les applications actuellement déployées dans le cluster. Cette application supporte également l'authentification OIDC ce qui nous permet d'utiliser Keycloak comme provider d'authentification.
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Graphique}
@@ -1351,12 +1352,12 @@ Dans le monde de kubernetes, il existe des applications permettant de simplifier
 \end{figure}
 
 \paragraph{Architecture}
-Kubeapps est une application respectant l'architecture microservice. Elle est composée d'une ihm écrite en react/javascript (Kubeapps dashboard). Mais également d'une api écrite en Go (Kubeops), elle est en charge de la communication avec Helm 3 ou encore avec les différentes ressources kubernetes (comme les AppRepositories ou les secrets).\\
+Kubeapps est une application respectant l'architecture microservice. Elle est composée d'une ihm écrite en react/javascript (Kubeapps dashboard). Mais également d'une API écrite en Go (Kubeops), elle est en charge de la communication avec Helm 3 ou encore avec les différentes ressources Kubernetes (comme les AppRepositories ou les secrets).\\
 
 \paragraph{Verdict}
-Kubeapps permet donc de faire une grosse partie de ce que onyxia fait déja : lister des services et les installer dans le cluster, consulter leur configuration et y accéder. Cependant ce dernier ne permet pas de forcer certaines valeurs à la place de l'utilisateur (par exemple l'url du service),  de plus Kubeapps ne configure pas les services tout seul, c'est à l'utilisateur de saisir la configuration (pour un postgres il faudrait notamment que l'utilisateur choisissent son mdp, son url, la taille de la bdd associées etc...). Utiliser Kubeapps comme une alternative à Onyxia n'est donc pas possible sans modifier son code source. Cela impliquerait de modifier le code de kubeops (l'api) écrit en go, mais le rapport coût d'entrée et développement est relativement élevé, d'autant plus que le go n'est pas courant à l'Insee (ce serait pour l'Insee une application difficilement maintenable).\newline
+Kubeapps permet donc de faire une grosse partie de ce que onyxia fait déja : lister des services et les installer dans le cluster, consulter leur configuration et y accéder. Cependant ce dernier ne permet pas de forcer certaines valeurs à la place de l'utilisateur (par exemple l'url du service),  de plus Kubeapps ne configure pas les services tout seul, c'est à l'utilisateur de saisir la configuration (pour un postgres il faudrait notamment que l'utilisateur choisissent son mdp, son url, la taille de la bdd associées etc...). Utiliser Kubeapps comme une alternative à Onyxia n'est donc pas possible sans modifier son code source. Cela impliquerait de modifier le code de kubeops (l'API) écrit en go, mais le rapport coût d'entrée et développement est relativement élevé, d'autant plus que le go n'est pas courant à l'Insee (ce serait pour l'Insee une application difficilement maintenable).\newline
 
-Une deuxième solution évoquée a été de faire interagir onyxia directement avec l'API de Kubeapps. En effet on pourrait déployer Kubeapps dans le cluster et faire dialoguer Onyxia avec Kubeapps. Cela permettrait, d'une part au développeur de se connecter à Kubeapps à l'aide d'un token Kubernetes et de pouvoir configurer son application tel qu'il le souhaite, d'autre part au statisticien d'utiliser Onyxia pour déployer des services configuré rapidement. Onyxia devra néanmoins être capable de forcer les values pour chaque déploiement. L'API de Kubeapps nous servirait donc a installer le chart, à lister ceux déja déployer, et à les supprimer. 
+Une deuxième solution évoquée a été de faire interagir onyxia directement avec l'API de Kubeapps. En effet on pourrait déployer Kubeapps dans le cluster et faire dialoguer Onyxia avec Kubeapps. Cela permettrait, d'une part au développeur de se connecter à Kubeapps à l'aide d'un token Kubernetes et de pouvoir configurer son application tel qu'il le souhaite, d'autre part au statisticien d'utiliser Onyxia pour déployer des services configuré rapidement. Onyxia devra néanmoins être capable de forcer les values pour chaque déploiement. L'API de Kubeapps nous servirait donc a installer le Chart, à lister ceux déja déployer, et à les supprimer. 
 \begin{figure}[H]
 \renewcommand{\figurename}{Graphique}
 \hspace{-3cm}
@@ -1369,6 +1370,11 @@ Cette solution n'a finalement pas été retenu, en effet faire reposer Onyxia su
 
 
 
+
+
+\chapterimage{/chapter-image/glossaire.png}
+\printglossaries
+\addcontentsline{toc}{chapter}{\textcolor{ocre}{Glossaire}}
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
@@ -1379,11 +1385,6 @@ Cette solution n'a finalement pas été retenu, en effet faire reposer Onyxia su
 \nocite{*}
 \vspace{-2cm}
 \printbibliography[heading=bibempty]
-
-
-\chapterimage{/chapter-image/glossaire.png}
-\printglossaries
-\addcontentsline{toc}{chapter}{\textcolor{ocre}{Glossaire}}
 
 %----------------------------------------------------------------------------------------
 %	INDEX
