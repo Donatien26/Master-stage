@@ -50,8 +50,8 @@
 \frontmatter
 %\usechapterimagefalse % If you don't want to include a chapter image, use this to toggle images off - it can be enabled later with \usechapterimagetrue
 
-\chapterimage{/chapter-image/modele-chapter-01.png}
-\chapter*{Abstract}
+\chapterimage{/chapter-image/abstract-01.jpg}
+\chapter*{Résumé}
 \vspace{-2cm}
 L'Insee dispose d'une plateforme permettant aux développeurs de réaliser des tâches d'intégration continue et aux statisticiens de déployer des services à la demande. Cette plateforme repose actuellement sur une architecture dite conteneurisée.\\
 
@@ -127,10 +127,10 @@ Gitlab est une des briques utilisée par la division innovation, pour la mise en
 Par ailleurs, la Diit a également développé une application appelée Onyxia. Cette application est un élément central du datalab et se veut comme un portail vers plusieurs applications : minIo (stockage), Vault (gestion des secrets), Keycloak (pour de la sécurité), Marathon (pour le déploiement de services). Elle permet également de déployer des applications déjà configurées à la demande. La plateforme repose sur une infrastructure conteneurisée à l'aide de l'orchestrateur de conteneurs Marathon. Ces deux notions seront présentées dans la suite du rapport. 
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
+\renewcommand{\figurename}{Schéma}
 \includegraphics[scale=0.2,clip,trim={18cm, 0cm, 0cm, 11.6cm}]{Pictures/onyxia/Onyxia archi.jpg}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Schéma simplifié de l'architecture de l'écosystème Onyxia \newline}
+\caption[]{Aperçu simplifié de l'architecture de l'écosystème Onyxia \newline}
 \end{figure}
 
 
@@ -165,7 +165,7 @@ Un conteneur est une unité logicielle standardisée qui regroupe le code, les d
 
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
+\renewcommand{\figurename}{Schéma}
 \includegraphics[scale=0.3]{Pictures/container_evolution.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Schéma récapitulatif entre VM et conteneur \newline}
@@ -228,8 +228,8 @@ Kubernetes (souvent abrégé k8s) est un produit open source développé initial
 \subsection{Swarn Docker}
 Swarm est la solution d’orchestration fournie par Docker. Il est difficile de prédire ce que sera Swarm dans un an tant son évolution a été rapide dernièrement. Au départ un composant à part, Swarm est désormais complètement intégré au service Docker. On ne parle plus de Swarm en tant que tel mais du Docker “Swarm mode”.\\
 
-
-Pour cette étude, nous nous intéresserons plus particulièrement à Mesos/Marathon (solution actuellement en place à l'Insee sur la plateforme innovation, par le biais de la licence entreprise DC/OS) et Kubernetes (par le biais de Google Cloud Provider (GCP))\footnote{Nous avons utiliser GCP pour plusieurs raisons : installer Kubernetes sur ses propres machines est relativement coûteux en temps et en moyen humain (en moyenne, une telle installation nécessite près de 6 mois pour être réalisée par une équipe d'une dizaine de personne à temps plein). Utiliser GCP nous a permis d'éviter de nous concentrer sur la maintenance des machines et de nous concentrer uniquement sur ce que pouvait apporter l'orchestrateur en terme de fonctionnalités. Ce choix nous a également permis de pouvoir poursuivre les travaux malgré le confinement dû au covid-19.} , le nouveau leader mondial dans l'orchestration de conteneur.\newline
+\section{Les solutions retenues}
+Pour cette étude, nous nous intéresserons plus particulièrement à Mesos/Marathon (solution actuellement en place à l'Insee sur la plateforme innovation, par le biais de la licence entreprise DC/OS) et Kubernetes (par le biais de Google Cloud Provider (GCP) voir annexe \ref{Terraform} pour plus de détail concernant la mise en place de cette solution)\footnote{Nous avons utiliser GCP pour plusieurs raisons : installer Kubernetes sur ses propres machines est relativement coûteux en temps et en moyen humain (en moyenne, une telle installation nécessite près de 6 mois pour être réalisée par une équipe d'une dizaine de personne à temps plein). Utiliser GCP nous a permis d'éviter de nous concentrer sur la maintenance des machines et de nous concentrer uniquement sur ce que pouvait apporter l'orchestrateur en terme de fonctionnalités. Ce choix nous a également permis de pouvoir poursuivre les travaux malgré le confinement dû au covid-19.} , le nouveau leader mondial dans l'orchestration de conteneur.\newline
 
 Selon Sysdig \footnote{ Rapport disponible ici : \url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}, plus de 77\% des personnes qui utilisent un orchestrateur de conteneur utilisent Kubernetes. Ce taux monte à plus de 85\% si l'on ajoute les solutions OpenShift et Rancher qui sont basées sur Kubernetes. Par ailleurs, Kubernetes bien qu'étant l'orchestrateur de conteneur le plus récent, possède déjà le plus grand nombre de commits\footnote{Un commit est le fait d'enregistrer dans un outil de gestion de versions (GitLab) une nouvelle version d'un ensemble de fichiers.}, une communauté active, et un cycle de développement très court (une version majeure est déployée tous les 3 mois).
 
@@ -250,21 +250,21 @@ Source : Sysdig, \url{https://sysdig.com/blog/sysdig-2019-container-usage-report
 
 
 \chapterimage{chapter-image/deployer-01.jpg} 
-\chapter{Déployer une application}
+\chapter{Architecture et déploiement d'applications}
 \vspace{-2cm}
 Dans cette partie, nous nous intéresserons au point commun et différence dans l'architecture des 2 orchestrateur. Nous aborderons ensuite les solutions afin de déployer une application avec l'un ou l'autre des orchestrateurs.
 
-\section{Architecture}
+\section{Architecture des 2 orchestrateurs}
 Le lecteur souhaitant avoir des informations plus techniques et plus complètes sur les 2 architectures peut se rendre en annexe \ref{Architecture}
 \subsection{Une architecture commune...}
 Kubernetes comme Mesos respectent le design d'architecture d'un orchestrateur de conteneurs classique. On retrouve des worker nodes (appelés "Node" pour k8s et "Mesos Agent" pour Mesos), des master nodes appelés "control-plane" dans les deux cas, et des public nodes.\\
 
 Pour les deux orchestrateurs, chaque worker node héberge un environnement d'exécution de conteneur (conteneur-runtime) et un agent qui va remonter l'état des applications déployées ("kubelet" dans Kubernetes, "Mesos Agent" pour Mesos) au master node. Les master nodes sont dans les deux cas composés d'une API permettant au développeur d'éxécuter des actions dans le cluster. Cette API de type REST \footnote{pour Application Programming Interface ou interface de programmation d’application} est un standard des applications web modernes.
 
-\subsection{... mais un fonctionnement différent}
+\subsection{... au fonctionnement différent}
 Cependant, Mesos permet l'installation de frameworks. Les frameworks sont des applications que l'on peut ajouter au cluster afin de répondre à certains besoins. Marathon est un de ces frameworks. Il permet au cluster Mesos de réaliser des tâches d'orchestration de conteneurs. Il existe cependant d'autres frameworks tels que Chronos (lancement de tâches) ou encore Aurora.\\
 
-Ces frameworks possédent deux composants : les schedulers et les executors. Ces deux composants sont situés respectivement au niveau du control-plane et sur les worker nodes. Cela vient donc complexifier l'architecture d'un cluster Mesos.\\
+Ces frameworks possédent deux composants : les schedulers et les executors. Ces deux composants sont situés respectivement au niveau du control-plane et sur les worker nodes. Chaque Mesos agent peut être attribuer à un ou plusieurs de ses frameworks. Cela vient donc complexifier l'architecture d'un cluster Mesos.\\
 
 Enfin, en pratique on s'aperçoit qu'un cluster Kubernetes peut gérer jusqu'à 5000 nodes alors qu'un cluster Mesos peut gérer jusqu'à 10 000 Mesos Agent.
 
@@ -306,13 +306,13 @@ Le déploiement d'une application est donc bien plus verbeux dans Kubernetes que
 \section{Des outils d'aide au développement}
 Un autre point qui intéresse le développeur, ce sont les outils de développement qui accompagnent chaque orchestrateur. En effet, un orchestrateur est attractif si il est simple de développer, de débugger et d'y surveiller les applications.\\
 
-Avec Marathon, les outils mis à la disposition du développeur sont peu nombreux. En effet, la ligne de commande DC/OS permet uniquement de déployer une application. L'interface admin de Mesos permet de suivre l'état du cluster, consommation de chaque node, gestion des alertes etc. Par l'intermédiaire de l'interface graphique (ou de la CLI) de Marathon le développeur peut consulter les logs d'exécution de ses Pods. La CLI Mesos permet également d'exécuter directement du code dans un conteneur, ce qui peut être utile pour débugger. Mais pour cela il faut configurer la CLI de Mesos, ce qui n'est pas évident et la gestion des droits n'est pas aisée non plus. C'est d'ailleurs pour cette raison, que l'innovation possède deux Marathon. Le premier est dédié au développeur dans le cadre de l'intégration continue, le deuxième est réservé au déploiement d'application "stable" tel que gitlab, rocketchat, etc... \\
+Avec Marathon, les outils mis à la disposition du développeur sont peu nombreux. En effet, la ligne de commande DC/OS permet uniquement de déployer une application. L'interface administrateur de DC/OS permet de suivre l'état du cluster, consommation de chaque node, gestion des alertes etc. Par l'intermédiaire de l'interface graphique (ou de la CLI) de Marathon le développeur peut consulter les logs d'exécution de ses déploiements. La CLI Mesos permet également d'exécuter directement du code dans un conteneur, ce qui peut être utile pour débugger. Mais pour cela il faut configurer la CLI de Mesos, ce qui n'est pas évident et la gestion des droits n'est pas aisée non plus. C'est d'ailleurs pour cette raison, que l'innovation possède deux Marathon. Le premier est dédié au développeur dans le cadre de l'intégration continue, le deuxième est réservé au déploiement d'application "stable" tel que gitlab, rocketchat, etc... \\
 
-Kubernetes propose lui aussi toute ces fonctionnalités. L'équivalent de l'interface administrateur est le Kubernetes dashboard, mais puisque les identifiants de connexions sont des tokens Kubernetes, le dashboard permet également la restriction de ressources et/ou de namespaces. La CLI kubectl apporte de nombreuses autres possibilités, comme par exemple la possibilité de "port-forward" un Pod. Grâce à cette fonctionnalitée, le développeur peut accéder à son Pod directement depuis son poste et sans avoir à configurer d'autres objets. La CLI kubectl permet également de faire des retours arrières sur nos déploiements. Par ailleurs, de nombreuse extensions existent, notamment l'extension vscode Kubernetes qui détecte automatiquement la configuration Kubernetes présente sur notre poste. Cela permet notamment de rassembler l'ensemble des outils du développeur au même endroit. Cette extension permet également de générer des squelettes d'objets deployment, service, ingress,etc... Il existe aussi l'outil lens qui est un IDE pour Kubernetes \footnote{\url{
+Kubernetes propose lui aussi toute ces fonctionnalités. L'équivalent de l'interface administrateur est le Kubernetes dashboard, mais puisque les identifiants de connexions sont des tokens Kubernetes, le dashboard permet également la restriction de ressources et/ou de namespaces. La CLI kubectl apporte de nombreuses autres possibilités, comme par exemple la possibilité de "port-forward" un Pod. Grâce à cette fonctionnalitée, le développeur peut accéder à son Pod directement depuis son poste et sans avoir à configurer d'autres objets. La CLI kubectl permet également de faire des retours arrières sur nos déploiements, d'accéder directement aux objets déployés dans le cluster et de les modifier avec un éditeur intégré. Par ailleurs, de nombreuses extensions existent, notamment l'extension vscode Kubernetes qui détecte automatiquement la configuration Kubernetes présente sur notre poste. Cela permet notamment de rassembler l'ensemble des outils du développeur au même endroit. Cette extension permet également de générer des squelettes d'objets deployment, service, ingress,etc... Il existe aussi l'outil lens qui est un IDE pour Kubernetes \footnote{\url{
 https://github.com/lensapp/lens}}.
 
 \section{Du template au gestionnaire de paquets}
-Il arrive que certaines applications soit déployé dans des environnements différents (par exemple dev, qf, prod,etc...). Plutôt que d'écrire plusieurs fois le même fichier en modifant uniquement certains paramêtre il peut être intéressant de bénéficier d'un squelette de l'application.
+Il arrive que certaines applications soit déployées dans des environnements différents (par exemple dev, qf, prod,etc...). Plutôt que d'écrire plusieurs fois les même fichiers de configuration en ne modifant uniquement que certains paramètres, il peut être intéressant de bénéficier d'un squelette de l'application qui sera ensuite adaptable à chacune des plateformes.
 \subsection{Des formats de templatings}
 Kubernetes, par le biais de l'outil "Kustomize", permet de définir des templates d'application. Cet outil fonctionne de la manière suivante :
 \begin{itemize}
@@ -323,15 +323,15 @@ Kubernetes, par le biais de l'outil "Kustomize", permet de définir des template
 Ce n'est pas le seul outil de création de modèle d'application existant dans Kubernetes : on citera notamment "jsonnet" et "ksonnet", non utilisé au cours de ce stage.\\ 
 
 DC/OS, quand à lui, a introduit la notion de Universe pour Mesos/Marathon. Les Universes utilisent le moteur de template Mustache. 
-Ce format de templates fonctionne à l’aide de “tags”, représenté sous la forme suivante : \{\{variableName\}\}. (Les accolades représentent les fameuses moustaches). On possède donc un modèle d'application avec ces tags aux endroits que l'on souhaite modifier. On utilise ensuite manuellement un outil permettant à partir d'un objet de configuration de remplir ces trous. Ce format n'a pas vocation a être utiliser manuellement, en effet c'est un outil intermédiaire dans la mise en place d'un gestionnaire de paquets par DC/OS.
+Ce format de templates fonctionne à l’aide de “tags”, représenté sous la forme suivante : \{\{variableName\}\}. (Les accolades représentent les fameuses moustaches). On possède donc un modèle d'application avec ces tags aux endroits que l'on souhaite modifier. On utilise ensuite manuellement un outil permettant à partir d'un objet de configuration de remplir ces trous. Ce format n'a pas vocation a être utiliser manuellement, en effet c'est un outil intermédiaire dans la mise en place d'un gestionnaire de paquets pour Mesos/Marathon par DC/OS.
 
 
 \subsection{Des gestionnaires de paquets}
 Le principe d'un gestionnaire de paquets est de pouvoir faciliter le déploiement d'un service au sein d'un environnement. Par exemple, si je veux installer wget sur Linux, il suffit d'ouvrir un terminal et taper \textit{sudo apt-get install wget}. Il pourrait donc être intéressant de disposer du même type d'outils mais au sein d'un cluster, pour par exemple installer rapidement des applications tel que Keycloak (authentification), la sphère Prometheus-Grafana, ou encore la brique ELasticSearch et Kibana (ELK). Marathon comme Kubernetes propose chacun leur gestionnaire de paquet. Helm pour Kubernetes, Universe pour DC/OS. \\
 
-Universe n'est pas directement un gestionnaire de paquet mais un format de templating développé afin d'être utilisé par le gestionnaire de paquets DC/OS. Ce gestionnaire de paquets est accessible depuis l'interface graphique de DC/OS ou depuis la CLI DC/OS. Par défaut DC/OS propose 120 applications installables par le biais de ce gestionnaire de paquets. Pour plus d'informations sur le fonctionnement des universes le lecteur peut se rendre en annexe \ref{Universe} \newline 
+Universe n'est pas directement un gestionnaire de paquet mais un format de templating développé afin d'être utilisé par le gestionnaire de paquets de DC/OS. Ce gestionnaire de paquets est accessible depuis l'interface graphique de DC/OS ou depuis la cli DC/OS. Par défaut DC/OS propose 120 applications installables par le biais de ce gestionnaire de paquets. Pour plus d'informations sur le fonctionnement des universes le lecteur peut se rendre en annexe \ref{Universe} \newline 
 
-Helm, quant à lui, est une CLI qui permet à la fois de déployer des paquets (appelé charts) dans Kubernetes mais aussi de lister les services déjà installés, de faire des montées de versions, de créer des paquets, d'ajouter de nouveaux répertoires contenant d'autre paquets. Et, comme Universe, c'est aussi un outil qui fournit son propre type de templating.\newline
+Helm, quant à lui, est une CLI qui permet à la fois de déployer des paquets (appelé charts) dans Kubernetes mais aussi de lister les services déjà installés, de réaliser des montées de versions, de créer de nouveaux paquets, et d'ajouter de nouveaux répertoires contenant d'autre paquets. Et, comme Universe, c'est aussi un outil qui fournit son propre format de templating.\newline
 
 Par ailleurs, Helm est le gestionnaire de packages recommandé par la Cloud Native Computing Foundation pour Kubernetes, ce qui lui vaut un certains succès. En effet, Helm propose plus de 1200 Charts Helm (bien loin des 120 packages du répertoire DC/OS) qui sont référencés sur \url{https://hub.helm.sh/}. Ce hub contient l'ensemble des Charts Helm considérés comme stables par Google. Mais il existe aussi de nombreux répertoires Helm alternatifs. Plus d'informations sur le fonctionnement de Helm est disponible en annexe \ref{Helm}\newline
 
@@ -351,7 +351,7 @@ L'intégration continue (CI) et le déploiement continu (CD) permettent de rappr
 Le GitOps est une approche où on décrit l’état souhaité de notre infrastructure dans Git. Un opérateur (une application intermédiaire) surveille le répertoire, et si des modifications ont lieu, il applique les changements nécessaires pour s’assurer que l'état actuel (l’état de l’environnement) tendent toujours vers l’état souhaité (le contenu du répertoire). 
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
+\renewcommand{\figurename}{Schéma}
 \includegraphics[scale=0.8]{Pictures/CI-CD/gitops-Intro.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Schéma simplifié du fonctionnement de GitOps \newline}
@@ -369,36 +369,51 @@ C'est par la suite que l'on distingue le modèle en push du modèle en pull.
 
 \subsection{Le modèle en push}
 \begin{figure}[H]
-\renewcommand{\figurename}{Graphique}
-\hspace{-2cm}
-\includegraphics[scale=0.5]{Pictures/CI-CD/push.png}
+\renewcommand{\figurename}{Schéma}
+\hspace{-1cm}
+\includegraphics[scale=0.6]{Pictures/CI-CD/push-model.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Schéma simplifié du modèle push de GitOps \newline}
 \end{figure}
 
-Dans le modèle en push, lorsque le répertoire contenant la configuration est mis à jour, un nouveau pipeline se lance afin de pusher la nouvelle configuration vers l'orchestrateur.\\
+Dans le modèle en push, lorsque le répertoire contenant la configuration est mis à jour, un nouveau pipeline se lance afin d'envoyer la nouvelle configuration vers l'orchestrateur.\\
 
 L'application qui push les changements vers l'orchestrateur joue alors le rôle de l'opérateur. Avec ce modèle, on ne peut cependant pas distinguer (sans monitoring ou investigation manuelle) une divergence entre la version s'exécutant dans le cluster et la version du répértoire git. 
 
 \subsection{Le modèle en pull}
 \begin{figure}[H]
-\renewcommand{\figurename}{Graphique}
-\hspace{-2cm}
-\includegraphics[scale=0.5]{Pictures/CI-CD/gitops-pull.png}
+\renewcommand{\figurename}{Schéma}
+\hspace{-1cm}
+\includegraphics[scale=0.6]{Pictures/CI-CD/pull-model.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Schéma simplifié du modèle pull de GitOps \newline}
 \end{figure}
 
 Dans le cadre du modèle en pull, un opérateur surveille en continue le répertoire contenant la configuration de l'application. Cet opérateur détecte alors une différence entre l'état souhaité et l'état courant. Il applique alors un patch afin de rétablir l'état du cluster vers celui du répértoire git. Ainsi, si une opération est faite manuellement directement dans le cluster, l'opérateur va remettre en conformité l'état du cluster avec l'état souhaité.
 
-
+\section{Pourquoi choisir d'utiliser des pratiques GitOps ? }
+\begin{itemize}
+    \item Le répertoire Git contient l'historique des modifications. Cela permet de voir comment l'infrastructure a évoluée. Les messages de commits s'ajoutent à la documentation déjà existante. De plus, cela permet de voir le déploiement comme du code. On peut donc désormais pratiquer les techniques de "pair programming" ou d'"extreme programming" qui ne peuvent être que bénéfiques. En effet, ces pratiques apportent beaucoup sur la qualité de code et de partage de connaissance sur le projet.
+    \item Les tickets kanboard n'ont plus de raison d'être et sont remplacés par des demandes de fusion(Merge request). La merge request explique les besoins et le propriétaire du dépot vérifie la validité de la merge request et l'accepte (ou non). On a donc deux avantages :  une réduction des erreurs humaines et un partage de connaissance.
+    \item Revenir en arrière suite à un déploiement, revient simplement à annuler la dernière fusion (faire un git revert sur le dernier commit.).
+    \item Comme tous les changements passent par Git, les modifications sont auditables. De plus, avec le  modèle en pull, seul l’opérateur a le droit de déployer dans le cluster. Il n'y a donc plus besoin de stocker les identifiants du cluster dans GitLab pour le CI. On a donc moins d'identifiants d'accès au cluster stocké à divers endroits, on limite ainsi les problèmes de sécurités.
+\end{itemize}
 
 
 
 
 \section{Quels outils choisir ?}
 \paragraph{GitLab CI}
-L'outil GitLab CI permet de faire du « CD » dans le cadre de la stratégie « push ». C’est d'ailleurs la solution actuellement utilisée à l'Insee. En effet, les équipes qui souhaitent faire du CD, mettent en place en fin de pipeline un job qui sera en charge de déployer la nouvelle application. Pour de l'utilisation avec Marathon ou Kubernetes, on peut par exemple avoir un dossier dans notre projet contenant des templates de fichiers de déploiements qui seront rempli par une tâches en fin de pipeline \footnote{Cette solution est celle actuellement utilisée à l'Insee avec Marathon. Un exemple d'implémentation est disponible ici: \url{www.gitlab.com/Donatien26/demo-ci}}. Cette solution trouve notamment son intêret dans le cadre de déploiement d'environnement de tests pour par exemple valider des demandes de fusions.\\
+L'outil GitLab CI permet de faire du « CD » dans le cadre de la stratégie « push ». \\
+
+C’est d'ailleurs la solution actuellement utilisée à l'Insee. En effet, les équipes qui souhaitent faire du CD, mettent en place en fin de pipeline un job qui sera en charge de déployer la nouvelle application. Pour de l'utilisation avec Marathon ou Kubernetes, on peut par exemple avoir un dossier dans notre projet contenant des templates de fichiers de déploiements qui seront rempli par une tâches en fin de pipeline \footnote{Cette solution est celle actuellement utilisée à l'Insee avec Marathon. Un exemple d'implémentation est disponible ici: \url{www.gitlab.com/Donatien26/demo-ci}}. Cette solution trouve notamment son intêret dans le cadre de déploiement d'environnement de tests pour par exemple valider des demandes de fusions. En effet redéployer une application nécéssite de relancer tout le pipeline.\\
+
+\begin{figure}[H]\centering
+\renewcommand{\figurename}{Schéma}
+\includegraphics[scale=0.55]{Pictures/CI-CD/insee-model.png}
+\captionsetup{margin=1.5cm,format=hang,justification=justified}
+\caption[]{Modèle Push actuellement utilisé à l'Insee \newline}
+\end{figure}
 
 Par ailleurs, GitLab propose également une intégration avec des clusters Kubernetes. Il suffit d’ajouter au projet GitLab les identifiants requis pour se connecter au cluster Kubernetes en question, pour que ce dernier déploit directement dans Kubernetes.\footnote{\url{https://docs.gitlab.com/ee/user/project/clusters/}}
 
@@ -431,30 +446,22 @@ ArgoCD propose plusieurs moyens pour communiquer avec lui : une interface, une l
 L'interface graphique d'argo permet notamment d'avoir une vue explosée de nos déploiement. Ci contre, dans l'exemple d'Onyxia, on retrouve toutes les entités de Kubernetes : ingress, Pod, deployment, Service, role-binding,... On a également accès aux manisfestes, logs de chaque composant, historique de déploiement, ainsi que la possibilité de faire des rollbacks\footnote{retour sur une version précédente de l'application} en un clic.
 
 \begin{figure}[H]
-\renewcommand{\figurename}{Graphique}
-\hspace{-1.5cm}
-\includegraphics[scale=0.11]{Pictures/CI-CD/argocd_architecture.png}
+\renewcommand{\figurename}{Schéma}
+\includegraphics[scale=0.1]{Pictures/CI-CD/argocd_architecture.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Architecture et fonctionnement de l'environnement Argo \newline}
 \end{figure}
 
 
 \begin{figure}[H]
-\renewcommand{\figurename}{Graphique}
-\hspace{-2.5cm}\includegraphics[scale=0.5,trim={0 0 5cm 0},clip]{Pictures/CI-CD/Onyxia-argo.PNG}
+\renewcommand{\figurename}{Capture d'écran}
+\hspace{-2.5cm}
+\includegraphics[scale=0.5,trim={0 0 5cm 0},clip]{Pictures/CI-CD/Onyxia-argo.PNG}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Deploiement de Onyxia dans Argo \newline}
+\caption[]{Déploiement de Onyxia dans Argo \newline}
 \end{figure}
  
-\begin{interrupt}
-\paragraph{Les avantages du GitOps}
-\begin{itemize}
-    \item Le répertoire Git contient l'historique des modifications. Cela permet de voir comment l'infrastructure a évoluée. Les messages de commits s'ajoutent à la documentation déjà existante. De plus, cela permet de voir le déploiement comme du code. On peut donc désormais pratiquer les techniques de "pair programming" ou d'"extreme programming" qui ne peuvent être que bénéfiques. En effet, ces pratiques apportent beaucoup sur la qualité de code et de partage de connaissance sur le projet.
-    \item Les tickets kanboard n'ont plus de raison d'être et sont remplacés par des demandes de fusion(Merge request). La merge request explique les besoins et le propriétaire du dépot vérifie la validité de la merge request et l'accepte (ou non). On a donc deux avantages :  une réduction des erreurs humaines et un partage de connaissance.
-    \item Revenir en arrière suite à un déploiement, revient simplement à annuler la dernière fusion (faire un git revert sur le dernier commit.).
-    \item Comme tous les changements passent par Git, les modifications sont auditables. De plus, avec le  modèle en pull, seul l’opérateur a le droit de déployer dans le cluster. Il n'y a donc plus besoin de stocker les identifiants du cluster dans GitLab pour le CI. On a donc moins d'identifiants d'accès au cluster stocké à divers endroits, on limite ainsi les problèmes de sécurités.
-\end{itemize}
-\end{interrupt}
+
 
 \section{Le GitOps: oui mais pour quel projet ?}
 Avant de se lancer dans le GitOps, il faut d'abord que notre projet réponde à certains critères. En effet, les problèmes les plus fréquents dans un cluster sont les suivants: \\
@@ -608,6 +615,7 @@ Un répertoire Helm ou Universe est vu comme un catalogue. Chacun de ces catalog
 \end{interrupt}
 
 \begin{wrapfigure}[11]{l}{0.6\textwidth}
+\renewcommand{\figurename}{Diagramme}
 \includegraphics[scale=0.6]{Pictures/onyxia/workflow-catalog.png}
 \caption{Workflow lecture et ajout de catalogues \newline}
 \end{wrapfigure}
@@ -621,6 +629,7 @@ Au cours de cette première partie, la principale difficulté est venu des catal
 \subsubsection{Points commun et différences}
 Cette partie débute au moment où l'utilisateur se retrouve sur la page de configuration de son service sur Onyxia. Que le service proviennent d'un paquet Universe ou Helm, l'expérience utilisateur est la même mais l'implémentation diffère. En effet, lors de la création d'un service on a le workflow \footnote{On ne fait pas apparaître ici comment Onyxia-ui récupère les informations techniques de l'utilisateur (Vault, Git, Minio)} suivant : 
 \begin{figure}[H]\centering
+\renewcommand{\figurename}{Diagramme}
 \includegraphics[scale=0.6]{Pictures/onyxia/publish-service.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption{Workflow du déploiement d'un service \newline}
@@ -664,6 +673,22 @@ Pour Helm, chaque requête sur Onyxia-api pour lister mes services résulte en f
 
 Par ailleurs, le comportement de Helm n'est pas le même que Marathon lorsqu'on stoppe un service. En effet, Marathon distingue un service arrêté d'un service supprimé, ce n'est pas le cas de Helm. Un service Helm que l'on arrêtera sera perdu (il faudra repasser par l'étape de création pour en avoir un nouveau) alors qu'un service Universe déployé dans Marathon pourra être redémarré.
 
+\section{Quels besoin de sécurité ?}
+Dans le cadre d'une architecture conteneurisée il faut également mettre en place des mécanismes de sécurité. Dans le cadre de la plateforme innovation, deux critères sont importants à conserver : la disponibilité et le traçage. La confidentialité et l'intégrité n'est pour le moment pas du tout garantie. En effet cette plateforme reste tout de même une plateforme de "tests".\\
+
+La disponibilité de la plateforme de l’innovation est un sujet très important. En effet, chaque jours plusieurs dizaine de services à la demande et d’environnements de tests sont crées. Si l’orchestrateur qui gère l’ensemble de ces tâches venait à tomber, c’est plusieurs centaines de personnes qui seraient donc pénalisées. La disponibilité des services est donc primordiale. Pour garantir une disponibilité optimale, il faut tout d’abord pouvoir identifier les risques pouvant la réduire : perte de node, redémarrage d’un conteneur, manques de ressources, etc... \\
+
+Afin de se prémunir de certains problèmes il est important de disposer d’outils de surveillance au sein du cluster. En plus des outils natifs proposé par DC/OS ou par Kubernetes (les différents dashboards), on retrouve des outils externes disponibles sur les 2 orchestrateurs.\\
+
+Les 2 orchestrateurs permettent de déployer facilement l'outil Prometheus et Grafana. Cet outil va permettre d'agréger l'ensemble des métriques disponibles dans le cluster au même endroits. 
+
+Ce même outil permet de réaliser de la traçabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Hormis les outils de monitoring tel que les dashboards ou Prometheus Grafana, il existe des outils, (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émisent par l’utilisateur.\\
+
+La CNCF\footnote{Cloud Native Computing Foundation} recommande l’utilisation de l’outil Jaeger afin de réaliser du traçage au sein d’une architecture conteneurisée. Le traçage permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement.\\
+
+L'annexe \ref{securite} propose des informations complémentaires sur les sources de failles de sécurité dans un cluster, un zoom sur le fonctionnement de Prometheus-Grafana, et quelques proposition de pratiques plus ou moins simple à mettre en place afin de garantir une sécurité optimale. 
+
+
 
 
 
@@ -683,7 +708,7 @@ Ce stage a été l'occasion de comparer leur architecture et de s'approprier leu
 
 Ce stage a également mis en avant, pour les développeurs, l'importance  de savoir créer et utiliser des images Docker, puisqu'ils sont la base d'une architecture conteneurisée.\\
 
-Enfin, mes recherches dans le cadre de l'intégration continue, m'ont conduit a découvrir des outils (Argo), encore jamais utilisé à l'Insee, et qui facilite l'exploitation des conteneurs. Ces recherches ont sensibilisé, je pense, le public sur l'importance des travaux qu'il reste encore à réalisé à l'Insee afin de mettre en place de "vrais" processus d'intégration continue.\\
+Enfin, mes recherches dans le cadre de l'intégration continue, m'ont conduit a découvrir des outils (Argo), encore jamais utilisé à l'Insee, et qui facilite l'exploitation des conteneurs. Ces recherches ont sensibilisé, je pense, le public sur l'importance des travaux qu'il reste encore à réalisé à l'Insee afin d'améliorer les processus d'intégration continue.\\
 
 L'ensemble des travaux réalisés sur Onyxia présente de multiples intérêts : indépendance de DC/OS, ajout de fonctionnalités augmentant la disponibilité de l'application, et surtout l'application est désormais open-source. L'ajout du support de Kubernetes lui procure également une meilleure visibilité.\\
 
@@ -758,10 +783,10 @@ Le Container-Runtime est le logiciel responsable de l’exécution des conteneur
 En résumé, on peut schématiser un cluster Kubernetes de la manière suivante :
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
+\renewcommand{\figurename}{Schéma}
 \includegraphics[scale=0.09]{Pictures/Comparaison/Kubernetes-cluster-archi.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Schéma récapitulatif des entitées présentes dans un cluster Kubernetes \newline}
+\caption[]{Architecture d'un cluster Kubernetes \newline}
 \end{figure}
 
 
@@ -806,65 +831,11 @@ L'executor exécute la tâche demandée par le scheduler (relayée par le schedu
 
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
+\renewcommand{\figurename}{Schéma}
 \includegraphics[scale=0.3,trim={0 5cm 0 0},clip]{Pictures/Comparaison/mesos-architecture.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Schéma récapitulatif des entitées présentes dans un cluster Mesos \newline}
+\caption[]{Architecture simplifié d'un cluster Mesos \newline}
 \end{figure}
-
-
-
-\section*{Quels besoin de sécurité ?}
-Dans le cadre d'une architecture conteneurisée il faut également mettre en place des mécanismes de sécurité. Dans le cadre de la plateforme innovation, deux critères sont importants à conserver : la disponibilité et le traçage. La confidentialité et l'intégrité n'est pour le moment pas du tout garantie. En effet cette plateforme reste tout de même une plateforme de "tests".\\
-
-La disponibilité de la plateforme de l’innovation est un sujet très important. En effet, chaque jours plusieurs dizaine de services à la demande et d’environnements de tests sont crées. Si l’orchestrateur qui gère l’ensemble de ces tâches venait à tomber, c’est plusieurs centaines de personnes qui seraient donc pénalisées. La disponibilité des services est donc primordiale. Pour garantir une disponibilité optimale, il faut tout d’abord pouvoir identifier les risques pouvant la réduire : perte de node, redémarrage d’un conteneur, manques de ressources, etc... \\
-
-Afin de se prémunir de certains problèmes il est important de disposer d’outils de surveillance au sein du cluster. En plus des outils natifs proposé par DC/OS ou par Kubernetes (les différents dashboards), on retrouve des outils externes disponibles sur les 2 orchestrateurs.\\
-
-Les 2 orchestrateurs permettent de déployer facilement l'outil Prometheus et Grafana. Cet outil va permettre d'agréger l'ensemble des métriques disponibles dans le cluster au même endroits. 
-
-Ce même outil permet de réaliser de la traçabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Hormis les outils de monitoring tel que les dashboards ou Prometheus Grafana, il existe des outils, (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émisent par l’utilisateur.\\
-
-La CNCF\footnote{Cloud Native Computing Foundation} recommande l’utilisation de l’outil Jaeger afin de réaliser du traçage au sein d’une architecture conteneurisée. Le traçage permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement.\\
-
-L'annexe \ref{securite} propose des informations complémentaire sur les sources de failles de sécurité dans un cluster, un zoom sur le fonctionnement de Prometheus-Grafana, et quelques proposition de pratiques plus ou moins simple à mettre en place afin de garantir une sécurité optimale. 
-
-\chapterimage{chapter-image/autre-01.jpg} 
-\chapter{Interfaçage avec le cloud }
-\vspace{-2cm}
-Dans cette parties nous aborderons divers points qui différencient Kubernetes et Marathon de DC/OS. Nous aborderons notamment la partie interfaçage avec le cloud.
-
-\section*{Interfaçage avec le cloud}
-Lorsqu'on choisit son orchestrateur de conteneur, on tient forcement compte de la facilité de déploiement de ce dernier. En effet, en général on veut que notre infrastructure soit déployable facilement, rapidement, et sans faire face à une très grande complexité de configuration.
-
-\subsection*{Rappels : Paas, Saas, Iaas}
-Avant de parler de comment déployer notre orchestrateur dans le cloud, revenons sur les différentes offres cloud qui existent. Le cloud permet d’entreposer sur des serveurs à distance des logiciels et des données. Les fournisseurs cloud proposent différentes types de services clouds. On retrouve:
-\begin{itemize}
-    \item Iaas (Infrastructure as a service) : Dans ce type d'offre, l'utilisateur doit configurer l'ensemble de l'infrastructure informatique. Cela concerne notamment les serveurs, le réseau, le stockage de données, ou encore la solution de virtualisation choisie. Cette offre cloud demande à l'administrateur de forte compétence tantôt sur les systèmes d'exploitations, les données ou encore sur le réseau. L'IAAS permet de dématérialiser l'ensemble de l'infrastructure matérielle.
-    \item Paas (Plateform as a service): Dans cette solution, le fournisseur propose l'ensemble des solutions IAAS auxquelles il ajoute également la configuration des middleware : système d'exploitation, configuration réseau etc. Aucune configuration technique n'est requise.
-    \item Saas (Software as a Service): Une solution SAAS regroupe l'ensemble des services SAAS et IAAS auxquelles s'ajoutent l'installation, la maintenance et la gestion des applications. Cette solution permet la simple utilisation des services et ne nécessite aucune expertise technique ou informatique. Par exemple, gmail est une application SAAS.
-\end{itemize}
-
-
-\begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
-\includegraphics[scale=0.6]{Pictures/Comparaison/cloud/difference-cloud.png}
-\captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Différence entre offre Cloud Iaas, Saas et Paas \newline}
-\end{figure}
-
-Dans le cas du développeur qui veut pouvoir déployer rapidement ces applications, il est intéressant d'avoir accès à une offre Paas.
-
-\subsection*{Offre Cloud Marathon et Kubernetes}
-De part son succès, de nombreux provider cloud proposent une offre Kubernetes, parmi eux on peut citer : Microsoft Azure, Amazon EKS (Amazon Elastic Kubernetes Service), GKE (Google Kubernetes Engine), etc. Ces offres proposent de créer des clusters Kubernetes en quelques minutes seulement. Par exemple, il suffit de quelque clics (choix du nombre et du type des workers nodes, localisation du cluster et la version de Kubernetes) pour lancer un cluster Kubernetes dans GKE. Ici, on parle d'offre Paas (ou clés en main). En effet, une fois le cluster créé, le développeur peut directement y déployer ses applications.\\
-
-Pour le développeur qui veut tester Kubernetes sans avoir à lancer un cluster dans le cloud, de nombreuse solutions existent pour lancer un cluster Kubernetes en local : minikube avec virtualbox, k3s avec docker. Ces offres proposent des clusters Kubernetes déjà configurés avec un seul worker node, permettant au développeur de tester facilement les possibilités que peut offrir Kubernetes.\\
-
-Kubernetes centralise l'ensemble des providers cloud qui fournissent des solutions ici : \url{https://Kubernetes.io/fr/docs/setup/pick-right-solution/}. \\
-
-A l'inverse, pour Marathon il n'existe pas de solution Paas. Le seul moyen de lancer un cluster Mesos avec Marathon dans le cloud est de souscrire à une offre Iaas. Par la suite, l'utilisateur doit configurer ses machines, en y installant l'ensemble des briques Mesos ou en utilisant l'outil d'installation DC/OS. De la même façon, il est impossible de lancer un cluster Mesos avec Marathon en local sans devoir configurer l'ensemble de la sphère Mesos\footnote{\url{http://www.lordofthejars.com/2015/04/apache-mesos-marathon-and-java-ee.html} pour une utilisation en local}. Cette différence s'explique notamment par le fait que les utilisateurs de Mesos, n'utilisent pas ce dernier uniquement pour avoir Marathon comme framework. Le provider cloud n'a donc aucun intêret à proposer une offre packagée.\\
-
-Par ailleurs, il peut être intéressant d'automatiser la phase de création d'un cluster Kubernetes ou DC/OS (voir annexe \ref{Terraform}). Il existe 2 principaux outils qui répondent à de tels besoin: Terraform et Ansible. Généralement, on pourra utiliser Terraform et/ou Ansible avec k8s alors que DC/OS ne sera compatible qu'avec Ansible.
 
 
 
@@ -1040,7 +1011,7 @@ Le contrat du service est le suivant :
     spec:
       ports:
       - name: http
-        -port: 80
+        port: 80
         targetPort: 8080
       selector:
         app: vs-code
@@ -1105,12 +1076,166 @@ Pour les applications possédant un contrat Marathon fixe et qui est exécuté c
 Actuellement, l'application est capable de convertir un contrat Marathon contenant une ou plusieurs applications, en ajoutant les limites de ressources, les ingress, et en injectant les configurations nécessaires. Cependant, deux fonctionnalités restent à développer. En effet, les contrats Marathon disposent d'une partie fetch qui permet notamment de télécharger des ressources et les place dans la "sandbox", un dossier accessible par tous les conteneurs du contrat. Cette notion de fetch n'existe pas directement dans Kubernetes, il faut créer des init-containers, des conteneurs qui s'exécuteront avant notre conteneur contenant l'application. Une autre fonctionnalité est le fait de pouvoir convertir un groupe d'applications comme par exemple la brique ELK (ElasticSearch, Logstash, Kibana).\newline
 
 Le but originel de ce projet était de pouvoir convertir un contrat Marathon en contrat Kubernetes à la volée dans Onyxia, afin de pouvoir migrer rapidement des déploiement Marathon vers Kubernetes afin de tester si le cluster Kubernetes interne supportait ou non la charge. Nous n'avons donc pas poussé l'implémentation plus loin, cependant ce projet est utilisable en l'état.
+
+
+
+
+\chapterimage{chapter-image/Universe-01.jpg} 
+\chapter{Compléments sur les Universes}
+\label{Universe}
+\vspace{-2cm}
+DC/OS a introduit la notion de Universe pour son gestionnaire de paquets. Universe n'est pas directement un gestionnaire de paquets, mais plutôt une syntaxe de templates \footnote{Un template est un modèle générique dans lequel on va pouvoir insérer des modifications.} utilisé par DC/OS pour son gestionnaire de paquets. \newline
+
+Un Universe est un ensemble de paquets (on parle de packages) qui peuvent être installés au sein du cluster Mesos par le biais de l'interface UI (admin) de DC/OS ou bien par la ligne de commande DC/OS.\newline
+
+
+Un Universe est décrit par un fichier json (exposé ici par exemple \url{https://Inseefrlab.github.io/Universe-Datascience/universe.json}). Chaque package  est décrit par la fusion de 4 fichiers présents dans le dépot de l'Universe : config.json, marathon.json.mustache, ressource.json et package.json.
+
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Tableau}
-\includegraphics[scale=0.6]{Pictures/CI-CD/marathon-to-kub.PNG}
+\renewcommand{\figurename}{Capture d'écran}
+\includegraphics[scale=0.5,trim={0 0 20cm 0},clip ]{Pictures/Comparaison/deployer/universe/universe-repo.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Recapitulatif des fonctionnalités prisent en charge par l'application \newline}
+\caption[]{Extrait des fichiers composant un Universe \newline}
 \end{figure}
+
+\paragraph{marathon.json.mustache:} Ce fichier est le template de l'application, qui une fois complété, créera une définition d'application Marathon capable de faire fonctionner le service. Les variables du marathon.json.mustache seront évaluées à partir d'un objet d'union créé en fusionnant trois objets dans l'ordre suivant :
+\begin{itemize}
+    \item Valeurs par défaut spécifiées dans le fichier config.json
+    \item Les options fournies par l'utilisateur proviennent soit du DC/OS CLI (Command Ligne Interface ou interface en ligne de commande), soit du DC/OS UI (User Interface ou interface utilisateur)
+    \item Le contenu de resource.json
+\end{itemize}
+
+
+\paragraph{config.json:} Ce fichier décrit les propriétés de configuration supportées par le package, représentées sous la forme d'un schéma json. Chaque propriété peut spécifier si elle est requise ou non, ainsi qu'une valeur par défaut.
+
+Les utilisateurs peuvent ensuite remplacer des valeurs spécifiques au moment de l'installation en transmettant un fichier d'options à l'interface utilisateur du DC/OS ou en définissant des valeurs de configuration via l'interface utilisateur du DC/OS.
+
+\paragraph{resource.json:} Ce fichier contient toutes les ressources hébergées en externe (par exemple les images Docker, les icônes, etc.) nécessaires à l'installation de l'application.
+
+\paragraph{package.json:} Ce fichier contient des informations sur le package en question comme par exemple la version, son nom, etc.\newline 
+
+\subsubsection{Installation}
+Le catalogue Universe proposé par DC/OS contient environ 120 paquets que l'on peut exécuter uniquement depuis l'interface admin de DC/OS ou la CLI DC/OS.\footnote{On peut également remplir nous même le marathon.json.mustache et l'envoyer ensuite à l'API, mais on perd la notion de gestionnaire de paquets.}
+
+\chapterimage{chapter-image/helm-01.jpg} 
+\chapter{Compléments sur Helm}
+\label{Helm}
+\vspace{-2cm}
+Helm est un projet opensource créé en 2015. C'est le gestionnaire de paquets recommandé par la CNCF (Cloud Native Computing Foundation) pour l'univers Kubernetes. C'est un projet implémenter en Go\footnote{Go est un langage de programmation compilé et concurrent inspiré de C et Pascal. Ce langage a été développé par Google.} (comme de nombreux projets qui gravitent autour de Kubernetes).\\
+
+Helm est un SDK (Software Development Kit, un ensemble d’outils d’aide à la programmation) qui se découpe en 2 parties: 
+\begin{itemize}
+    \item Le client Helm est une ligne de commande pour l'utilisateur. La ligne de commande permet d'installer ou désinstaller des applications, d'installer automatiquement des dépendances applicatives, de mettre à jour des applications, de configurer des déploiements d'application, de récupérer des paquets d'application dans des dépôts, et enfin de communiquer avec la librairie Helm.
+    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des Charts pour créer des releases. C'est également elle qui implémente la logique de montée de version (rolling-update) ou de désinstallation des releases.
+\end{itemize}
+
+Helm s'accompagne de 3 concepts : les Charts, la config et la release. Nous allons parcourir ces différentes notions.
+
+\subsubsection{Charts}
+Les packages Helm sont appelés des Charts et sont composés de plusieurs fichiers de configurations yaml (qui sont principalement des templates) et qui seront convertis en fichiers yaml compréhensible par Kubernetes grâce à la librairie Helm. La structure d'un Chart est la suivante :
+
+\begin{figure}[H]\centering
+\renewcommand{\figurename}{Capture d'écran}
+\includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/helmChart.png}
+\captionsetup{margin=1.5cm,format=hang,justification=justified}
+\caption[]{Aperçu de l'ensemble des fichiers composant un Chart\newline
+Remarque : Ici on a que les fichiers par défaut, dans la réalité il peut y en avoir beaucoup plus. \newline}
+\end{figure}
+
+\begin{itemize}
+        \item charts/ : Les dépendances gérées manuellement peuvent être placées dans ce répertoire, bien qu'il soit généralement préférable d'utiliser dependencies dans Chart.yaml pour lier dynamiquement les dépendances.
+        \item templates/ : Ce répertoire contient des fichiers templates qui vont être combinés avec des valeurs de configuration (provenant de values.yaml et de la ligne de commande) et rendus dans des manifestes Kubernetes. Ils contiennent en général au moins l'équivalent des trois fichiers basiques de Kubernetes : ingress, service et deployment. Les modèles utilisent le format de template du langage de programmation Go.
+        \item Chart.yaml : Un fichier yaml contenant des métadonnées sur le Chart, telles que le nom et la version du Chart, des informations sur le créateur, un site web pertinent et des mots-clés de recherche, les dépendances du Chart.
+      \item LICENCE : Une licence en texte clair pour le Chart.
+     \item README.md : Un fichier readme avec des informations pour les utilisateurs du Chart.
+      \item values.yaml : Un fichier YAML contenant les valeurs de configuration par défaut du Chart.\newline
+\end{itemize} 
+
+L'ensemble des Charts est ensuite placé dans un Helm repository. Un Helm repository est un site HTTP qui délivre un fichier index.yaml et des Charts packagées. Ces fichiers peuvent être servis par n'importe quel serveur web, service de stockage d'objets ou un hôte de site statique tel que les pages GitHub(par exemple \url{https://inseefrlab.github.io/helm-charts-datascience/index.yaml}.
+
+\subsubsection{Config et Release}
+Helm permet de surcharger la configuration par défaut fourni avec un Chart. Cette surcharge peut s'effectuer de deux manières distinctes :
+\begin{itemize}
+    \item Par le biais d'un fichier values.yaml: l'utilisateur crée un fichier contenant les valeurs qu'il souhaite surcharger par rapport à la configuration par défaut.
+    Il lui suffit alors de le préciser lors de l'installation du Chart \textit{Helm install chart mychart -f my-values.yaml}
+    \item L'utilisateur peut également surcharger les valeurs de déploiement directement depuis la ligne de commande. On aurait donc (pour le même exemple que ci dessus) \textit{Helm install chart mychart --set ingress.enabled=true}.
+    \item Enfin on peut également combiner les deux. \textit{Helm install chart mychart -f my-values.yaml --set ingress.enabled=true}.
+\end{itemize}
+
+Lorsque un Chart est installé dans le cluster, on parle alors de release. Une release est une instance d'un Chart exécuté dans un cluster Kubernetes. Un Chart peut souvent être installé plusieurs fois dans le même cluster. Et chaque fois qu'il est installé, une nouvelle release est créée.
+
+
+\chapterimage{chapter-image/cloud.jpg} 
+\chapter{GKE et Terraform : K8S en quelque clics}
+\label{Terraform}
+\vspace{-2cm}
+\section*{Motivation}
+Afin de pouvoir travailler sur Kubernetes à la fois depuis et hors de l'Insee, j'ai dans un premier temps utilisé minikube. Cette solution fonctionnait bien mais a vite présenté ses limites : environnement avec un seul node qui n'est pas du tout représentatif d'un environnement standard Kubernetes, et toute les configurations réalisée sur l'un des minikubes devait alors être réalisé sur l'autre.\newline
+
+J'ai donc cherché une solution répondant aux critères suivant: je voulais avoir accès au cluster Kubernetes de n'importe où avec une configurations la moins dépendante possible du poste utilisé; les postes Insee fonctionnant sous Windows 7 avec des droits de base assez limité et un proxy, l'installation de tout les outils utilisés au cours de ce stage n'était pas facilitée. J'ai donc crée dans le cloud google une instance de vm ubuntu qui me servirait de point d'entrée pour mon futur cluster Kubernetes et sur laquelle j'installerai tout les outils nécessaires. Il me suffirait juste de me connecter a cet machine par ssh depuis n'importe quel ordinateur afin de bénéficier de tout ses outils.\newline
+
+
+\section*{Gcloud}
+Afin de répondre à ce besoin je me suis orienté vers Gcloud. Google Cloud est la plateforme qui regroupe les différents services cloud de Google. Gcloud propose différents services Cloud de calcul, de stockage, de networking, de Big Data, de machine Learning, d’internet des objets, de sécurité, de gestion cloud et de développement d’applications qui sont directement lancés sur les serveurs de Google. Cela permet donc à l'utilisateur de ne pas se soucier de la configuration des machines physique et de se concentrer uniquement sur le code de ce qu'il veut faire.\newline
+
+On peut interagir avec Gcloud depuis l'interface prévu a cet effet ici \url{https://console.cloud.google.com/} ou bien par l'intermédiaire d'une CLI.\newline
+
+Parmi les services proposés, 3 ont été utilisés : Compute engine afin de créer une instance de VM ubuntu me servant de point d'entrée dans le cluster, Google Kubernetes Engine pour créer un cluster Kubernetes et Cloud Dns pour assurer le routage de l'ensemble des requêtes vers le cluster et le service correspondant (cela nécessite au préalable de bénéficier d'un nom de domaine et de certificats\footnote{En effet le proxy utilisé par l'Insee n'accepte pas les sites web dont le certificat n'a pas été signé par une AC (authorité de confiance) reconnue. Pour obtenir un certificat, j'ai utilisé Let's Encrypt.} valides).\newline
+
+Google Kubernetes Engine (GKE) permet de créer des clusters Kubernetes en quelques clics: l'utilisateur choisit un nom pour son cluster, la région dans laquelle le cluster sera déployé , et le nombre et la puissance des worker-nodes. En quelques minutes le cluster est alors configuré par Google et prêt à recevoir les premières requêtes.\newline
+
+Comme tout les services Gcloud, GKE est un service pay-as-you-go (facturation à l’utilisation), afin de débourser le minimun j'éteignais donc régulièrement le cluster afin de "consommer" le moins possible. Le fait d'éteindre le cluster entraînait une perte de la configuration du cluster et je devais recommencer à chaque fois. J'ai donc cherché un outils me permettant d'automatiser cette phase.
+
+\section*{Terraform}
+Terraform est un outil d'infrastructure-as-code, open-source, et développé par Hashicorp qui permet d'automatiser la gestion d'une insfrastructure cloud, de plateformes, et de services. Il permet d'automatiser la configuration de VMs, ou de la création d'environnement cloud. \newline
+
+Généralement, pour passer d'un état A à un état B, les outils semblables (tel que Chef ou Ansible) utilise un style de procédure où est décrit un code qui spécifie, étape par étape, comment atteindre un certain état final souhaité. Terraform (comme Puppet)  fonctionne différement, il repose sur un style plus déclaratif dans lequel un fichier contient le code qui spécifie l'état final souhaité. \newline
+
+Pour cela Terraform fonctionne en 3 phases. Dans la première phase (dite de code), le développeur décrit l'état souhaité de son cluster ou de sa VM au sein de un ou plusieurs fichiers. Dans un second temps (phase plan), Terraform va comparer l'état actuel du cluster avec celui décrit au sein des fichiers de la première phase. Enfin dans un dernier temps (phase apply), il va appliquer les changements au cluster afin de le faire tendre vers l'état désiré. Au cours de cette partie Terraform peut nous renvoyer des variables qu'il aura générée (le lien du Kubernetes dashboard par exemple).\newline
+
+\begin{figure}[H]\centering
+\renewcommand{\figurename}{Schéma}
+\includegraphics[scale=0.22]{Pictures/annexe/terraform-cloud.png}
+\captionsetup{margin=1.5cm,format=hang,justification=justified}
+\caption[]{Schéma récapitulatif du fonctionnement de Terraform \newline}
+\end{figure}
+
+Ces 3 phases sont facilités par la présence de modules (aussi appelés providers) fournit par la communauté et les fournisseurs cloud, afin de facilité l'interaction entre Terraform et la ressource que l'on veut modifier. On trouve donc un provider gcloud, AWS, (pour la configuration des clusters) mais aussi des providers Kubernetes (pour interagir avec l'API-server) ou un provider Helm afin de communiquer directement avec Helm.\newline
+
+Grâce à Terraform nous avons pu écrire des scripts qui permettent de se créer un cluster Kubernetes pré-configuré et répondant a nos besoin en moins de 6 minutes, rejouable à l'infini et qui réponds à la logique devops. C'est à dire que l'ajout ou la modification d'une ressource ne relance pas toutes les phases et que l'ensemble du code peut donc être stocké dans un répertoire Git. Le répértoire contenant les codes Terraform du cluster GKE insee est disponible ici : \url{https://github.com/InseeFrLab/helm-charts}
+
+
+
+\chapterimage{/chapter-image/Kubeapps.png}
+\chapter{Kubeapps une alternative à Onyxia ?}
+\label{kubeapps}
+\vspace{-2cm}
+Dans le monde de Kubernetes, il existe des applications permettant de simplifier le déploiement de Charts Helm. On citera notamment Kubeapps ou encore Rancher. Kubeapps est un Chart Helm qui permet de déployer une interface web permettant à son tour de déployer et de gérer des applications dans Kubernetes. Il permet d'ajouter des répertoires de Chart Helm (aussi bien public que privé) et de les déployer dans le cluster. Kubeapps permet également de gèrer, monter les versions, et supprimer les applications actuellement déployées dans le cluster. Cette application supporte également l'authentification OIDC ce qui nous permet d'utiliser Keycloak comme provider d'authentification.
+
+\begin{figure}[H]\centering
+\renewcommand{\figurename}{Capture d'écran}
+\hspace{-1cm}
+\includegraphics[scale=0.10]{Pictures/onyxia/kubeapps.jpg}
+\captionsetup{margin=1.5cm,format=hang,justification=justified}
+\caption[]{Aperçus de l'interface de Kubeapps \newline}
+\end{figure}
+
+\paragraph{Architecture}
+Kubeapps est une application respectant l'architecture microservice. Elle est composée d'une ihm écrite en react/javascript (Kubeapps dashboard). Mais également d'une API écrite en Go (Kubeops), elle est en charge de la communication avec Helm 3 ou encore avec les différentes ressources Kubernetes (comme les AppRepositories ou les secrets).\\
+
+\paragraph{Verdict}
+Kubeapps permet donc de faire une grosse partie de ce que onyxia fait déja : lister des services et les installer dans le cluster, consulter leur configuration et y accéder. Cependant ce dernier ne permet pas de forcer certaines valeurs à la place de l'utilisateur (par exemple l'url du service),  de plus Kubeapps ne configure pas les services tout seul, c'est à l'utilisateur de saisir la configuration (pour un postgres il faudrait notamment que l'utilisateur choisissent son mdp, son url, la taille de la bdd associées etc...). Utiliser Kubeapps comme une alternative à Onyxia n'est donc pas possible sans modifier son code source. Cela impliquerait de modifier le code de kubeops (l'API) écrit en Go, mais le rapport coût d'entrée et développement est relativement élevé, d'autant plus que le Go n'est pas courant à l'Insee (ce serait pour l'Insee une application difficilement maintenable).\newline
+
+Une deuxième solution évoquée a été de faire interagir Onyxia directement avec l'API de Kubeapps. En effet on pourrait déployer Kubeapps dans le cluster et faire dialoguer Onyxia avec Kubeapps. Cela permettrait, d'une part au développeur de se connecter à Kubeapps à l'aide d'un token Kubernetes et de pouvoir configurer son application tel qu'il le souhaite, d'autre part au statisticien d'utiliser Onyxia pour déployer des services configuré rapidement. Onyxia devra néanmoins être capable de forcer les values pour chaque déploiement. L'API de Kubeapps nous servirait donc a installer le Chart, à lister ceux déja déployer, et à les supprimer. 
+\begin{figure}[H]
+\renewcommand{\figurename}{Schéma}
+\hspace{-3cm}
+\includegraphics[scale=0.8]{Pictures/onyxia/Kubeapps.png}
+\captionsetup{margin=1.5cm,format=hang,justification=justified}
+\caption[]{Architecture onyxia + Kubeapps \newline}
+\end{figure}
+
+Cette solution n'a finalement pas été retenue, en effet faire reposer Onyxia sur Kubeapps n'est pas forcement quelque chose de souhaitable puisque les différents endpoints de Kubeapps peuvent être amenés à évoluer. Kubeapps devenant juste un intermédiaire entre Helm et Onyxia, le coût pour qu'Onyxia  puisse dialoguer directement avec Helm ne nous paraissait pas important au point de retenir cette solution.
 
 
 
@@ -1174,7 +1299,7 @@ Ensuite il suffit d'interfacer Grafana avec Prometheus. Grafana peut s'interface
 Prometheus et Grafana s'installent facilement dans Marathon et ou Kubernetes. En effet, pour Marathon les deux sont disponible dans les paquets universes officiel, et pour Kubernetes plusieurs Charts Helm facilitent leur installation.
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Tableau}
+\renewcommand{\figurename}{Schéma}
 \includegraphics[scale=1]{Pictures/annexe/architecture.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Architecture générale de Prometheus et Grafana \newline}
@@ -1216,179 +1341,43 @@ Kubernetes (par rapport a Marathon) permet, par l'intermédiaire d'OPA (open pol
 
 
 
-
-
-
-
-
-
-\chapterimage{chapter-image/cloud.jpg} 
-\chapter{Compléments sur les Universes}
-\label{Universe}
-DC/OS a introduit la notion de Universe pour son gestionnaire de paquets. Universe n'est pas directement un gestionnaire de paquets, mais plutôt une syntaxe de templates \footnote{Un template est un modèle générique dans lequel on va pouvoir insérer des modifications.} utilisé par DC/OS pour son gestionnaire de paquets. \newline
-
-Un Universe est un ensemble de paquets (on parle de packages) qui peuvent être installés au sein du cluster Mesos par le biais de l'interface UI (admin) de DC/OS ou bien par la ligne de commande DC/OS.\newline
-
-
-Un Universe est décrit par un fichier json (exposé ici par exemple \url{https://Inseefrlab.github.io/Universe-Datascience/universe.json}). Chaque package  est décrit par la fusion de 4 fichiers présents dans le dépot de l'Universe : config.json, marathon.json.mustache, ressource.json et package.json.
-
-\begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
-\includegraphics[scale=0.5,trim={0 0 20cm 0},clip ]{Pictures/Comparaison/deployer/universe/universe-repo.png}
-\captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Extrait des fichiers composant un Universe \newline}
-\end{figure}
-
-\paragraph{marathon.json.mustache:} Ce fichier est le template de l'application, qui une fois complété, créera une définition d'application Marathon capable de faire fonctionner le service. Les variables du marathon.json.mustache seront évaluées à partir d'un objet d'union créé en fusionnant trois objets dans l'ordre suivant :
-\begin{itemize}
-    \item Valeurs par défaut spécifiées dans le fichier config.json
-    \item Les options fournies par l'utilisateur proviennent soit du DC/OS CLI (Command Ligne Interface ou interface en ligne de commande), soit du DC/OS UI (User Interface ou interface utilisateur)
-    \item Le contenu de resource.json
-\end{itemize}
-
-
-\paragraph{config.json:} Ce fichier décrit les propriétés de configuration supportées par le package, représentées sous la forme d'un schéma json. Chaque propriété peut spécifier si elle est requise ou non, ainsi qu'une valeur par défaut.
-
-Les utilisateurs peuvent ensuite remplacer des valeurs spécifiques au moment de l'installation en transmettant un fichier d'options à l'interface utilisateur du DC/OS ou en définissant des valeurs de configuration via l'interface utilisateur du DC/OS.
-
-\paragraph{resource.json:} Ce fichier contient toutes les ressources hébergées en externe (par exemple les images Docker, les icônes, etc.) nécessaires à l'installation de l'application.
-
-\paragraph{package.json:} Ce fichier contient des informations sur le package en question comme par exemple la version, son nom, etc.\newline 
-
-\subsubsection{Installation}
-Le catalogue Universe proposé par DC/OS contient environ 120 paquets que l'on peut exécuter uniquement depuis l'interface admin de DC/OS ou la CLI DC/OS.\footnote{On peut également remplir nous même le marathon.json.mustache et l'envoyer ensuite à l'API, mais on perd la notion de gestionnaire de paquets.}
-
-\chapterimage{chapter-image/cloud.jpg} 
-\chapter{Compléments sur Helm}
-\label{Helm}
-Helm est un projet opensource créé en 2015. C'est le gestionnaire de paquets recommandé par la CNCF (Cloud Native Computing Foundation) pour l'univers Kubernetes. C'est un projet implémenter en Go\footnote{Go est un langage de programmation compilé et concurrent inspiré de C et Pascal. Ce langage a été développé par Google.} (comme de nombreux projets qui gravitent autour de Kubernetes).\\
-
-Helm est un SDK (Software Development Kit, un ensemble d’outils d’aide à la programmation) qui se découpe en 2 parties: 
-\begin{itemize}
-    \item Le client Helm est une ligne de commande pour l'utilisateur. La ligne de commande permet d'installer ou désinstaller des applications, d'installer automatiquement des dépendances applicatives, de mettre à jour des applications, de configurer des déploiements d'application, de récupérer des paquets d'application dans des dépôts, et enfin de communiquer avec la librairie Helm.
-    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des Charts pour créer des releases. C'est également elle qui implémente la logique de montée de version (rolling-update) ou de désinstallation des releases.
-\end{itemize}
-
-Helm s'accompagne de 3 concepts : les Charts, la config et la release. Nous allons parcourir ces différentes notions.
-
-\subsubsection{Charts}
-Les packages Helm sont appelés des Charts et sont composés de plusieurs fichiers de configurations yaml (qui sont principalement des templates) et qui seront convertis en fichiers yaml compréhensible par Kubernetes grâce à la librairie Helm. La structure d'un Chart est la suivante :
-
-\begin{figure}[H]\centering
-\renewcommand{\figurename}{Tableau}
-\includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/helmChart.png}
-\captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Aperçu des fichiers composant un Chart \newline}
-\end{figure}
-
-\begin{itemize}
-        \item charts/ : Les dépendances gérées manuellement peuvent être placées dans ce répertoire, bien qu'il soit généralement préférable d'utiliser dependencies dans Chart.yaml pour lier dynamiquement les dépendances.
-        \item templates/ : Ce répertoire contient des fichiers templates qui vont être combinés avec des valeurs de configuration (provenant de values.yaml et de la ligne de commande) et rendus dans des manifestes Kubernetes. Ils contiennent en général au moins l'équivalent des trois fichiers basiques de Kubernetes : ingress, service et deployment. Les modèles utilisent le format de template du langage de programmation Go.
-        \item Chart.yaml : Un fichier yaml contenant des métadonnées sur le Chart, telles que le nom et la version du Chart, des informations sur le créateur, un site web pertinent et des mots-clés de recherche, les dépendances du Chart.
-      \item LICENCE : Une licence en texte clair pour le Chart.
-     \item README.md : Un fichier readme avec des informations pour les utilisateurs du Chart.
-      \item values.yaml : Un fichier YAML contenant les valeurs de configuration par défaut du Chart.\newline
-        \begin{figure}[H]\centering
-        \renewcommand{\figurename}{Tableau}
-        \includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/values.png}
-        \captionsetup{margin=1.5cm,format=hang,justification=justified}
-        \caption[]{Exemple de fichier values.yaml \newline}
-        \end{figure}
-\end{itemize} 
-L'ensemble des Charts est ensuite placé dans un Helm repository. Un Helm repository est un site HTTP qui délivre un fichier index.yaml et des Charts packagées. Ces fichiers peuvent être servis par n'importe quel serveur web, service de stockage d'objets ou un hôte de site statique tel que les pages GitHub(par exemple \url{https://inseefrlab.github.io/helm-charts-datascience/index.yaml}.
-
-\subsubsection{Config et Release}
-Helm permet de surcharger la configuration par défaut fourni avec un Chart. Cette surcharge peut s'effectuer de deux manières distinctes :
-\begin{itemize}
-    \item Par le biais d'un fichier values.yaml: l'utilisateur crée un fichier contenant les valeurs qu'il souhaite surcharger par rapport à la configuration par défaut. Par exemple, si l'on reprend le fichier values.yaml ci-dessus, si l'utilisateur souhaite activer l'ingress, il aura juste à créer un fichier de la forme suivante : 
-        \begin{figure}[H]\centering
-        \renewcommand{\figurename}{Tableau}
-        \includegraphics[scale=1]{Pictures/Comparaison/deployer/Kubernetes/my-values.PNG}
-        \captionsetup{margin=1.5cm,format=hang,justification=justified}
-        \caption[]{Exemple de fichier my-values.yaml \newline}
-        \end{figure}
-    Il lui suffit alors de le préciser lors de l'installation du Chart \textit{Helm install chart mychart -f my-values.yaml}
-    \item L'utilisateur peut également surcharger les valeurs de déploiement directement depuis la ligne de commande. On aurait donc (pour le même exemple que ci dessus) \textit{Helm install chart mychart --set ingress.enabled=true}.
-    \item Enfin on peut également combiner les deux. \textit{Helm install chart mychart -f my-values.yaml --set ingress.enabled=true}.
-\end{itemize}
-
-Lorsque un Chart est installé dans le cluster, on parle alors de release. Une release est une instance d'un Chart exécuté dans un cluster Kubernetes. Un Chart peut souvent être installé plusieurs fois dans le même cluster. Et chaque fois qu'il est installé, une nouvelle release est créée.
-
-
-\chapterimage{chapter-image/cloud.jpg} 
-\chapter{GKE et Terraform : K8S en quelque clics}
-\label{Terraform}
+\chapterimage{chapter-image/autre-01.jpg} 
+\chapter{Interfaçage avec le cloud }
 \vspace{-2cm}
-\section*{Motivation}
-Afin de pouvoir travailler sur Kubernetes à la fois depuis et hors de l'Insee, j'ai dans un premier temps utilisé minikube. Cette solution fonctionnait bien mais a vite présenté ses limites : environnement avec un seul node qui n'est pas du tout représentatif d'un environnement standard Kubernetes, et toute les configurations réalisée sur l'un des minikubes devait alors être réalisé sur l'autre.\newline
+Dans cette parties nous aborderons divers points qui différencient Kubernetes et Marathon de DC/OS. Nous aborderons notamment la partie interfaçage avec le cloud.
 
-J'ai donc cherché une solution répondant aux critères suivant: je voulais avoir accès au cluster Kubernetes de n'importe où avec une configurations la moins dépendante possible du poste utilisé; les postes Insee fonctionnant sous Windows 7 avec des droits de base assez limité et un proxy, l'installation de tout les outils utilisés au cours de ce stage n'était pas facilitée. J'ai donc crée dans le cloud google une instance de vm ubuntu qui me servirait de point d'entrée pour mon futur cluster Kubernetes et sur laquelle j'installerai tout les outils nécessaires. Il me suffirait juste de me connecter a cet machine par ssh depuis n'importe quel ordinateur afin de bénéficier de tout ses outils.\newline
+\section*{Interfaçage avec le cloud}
+Lorsqu'on choisit son orchestrateur de conteneur, on tient forcement compte de la facilité de déploiement de ce dernier. En effet, en général on veut que notre infrastructure soit déployable facilement, rapidement, et sans faire face à une très grande complexité de configuration.
+
+\subsection*{Rappels : Paas, Saas, Iaas}
+Avant de parler de comment déployer notre orchestrateur dans le cloud, revenons sur les différentes offres cloud qui existent. Le cloud permet d’entreposer sur des serveurs à distance des logiciels et des données. Les fournisseurs cloud proposent différentes types de services clouds. On retrouve:
+\begin{itemize}
+    \item Iaas (Infrastructure as a service) : Dans ce type d'offre, l'utilisateur doit configurer l'ensemble de l'infrastructure informatique. Cela concerne notamment les serveurs, le réseau, le stockage de données, ou encore la solution de virtualisation choisie. Cette offre cloud demande à l'administrateur de forte compétence tantôt sur les systèmes d'exploitations, les données ou encore sur le réseau. L'IAAS permet de dématérialiser l'ensemble de l'infrastructure matérielle.
+    \item Paas (Plateform as a service): Dans cette solution, le fournisseur propose l'ensemble des solutions IAAS auxquelles il ajoute également la configuration des middleware : système d'exploitation, configuration réseau etc. Aucune configuration technique n'est requise.
+    \item Saas (Software as a Service): Une solution SAAS regroupe l'ensemble des services SAAS et IAAS auxquelles s'ajoutent l'installation, la maintenance et la gestion des applications. Cette solution permet la simple utilisation des services et ne nécessite aucune expertise technique ou informatique. Par exemple, gmail est une application SAAS.\\
+\end{itemize}
 
 
-\section*{Gcloud}
-Afin de répondre à ce besoin je me suis orienté vers Gcloud. Google Cloud est la plateforme qui regroupe les différents services cloud de Google. Gcloud propose différents services Cloud de calcul, de stockage, de networking, de Big Data, de machine Learning, d’internet des objets, de sécurité, de gestion cloud et de développement d’applications qui sont directement lancés sur les serveurs de Google. Cela permet donc à l'utilisateur de ne pas se soucier de la configuration des machines physique et de se concentrer uniquement sur le code de ce qu'il veut faire.\newline
-
-On peut interagir avec Gcloud depuis l'interface prévu a cet effet ici \url{https://console.cloud.google.com/} ou bien par l'intermédiaire d'une CLI.\newline
-
-Parmi les services proposés, 3 ont été utilisés : Compute engine afin de créer une instance de VM ubuntu me servant de point d'entrée dans le cluster, Google Kubernetes Engine pour créer un cluster Kubernetes et Cloud Dns pour assurer le routage de l'ensemble des requêtes vers le cluster et le service correspondant (cela nécessite au préalable de bénéficier d'un nom de domaine et de certificats\footnote{En effet le proxy utilisé par l'Insee n'accepte pas les sites web dont le certificat n'a pas été signé par une AC (authorité de confiance) reconnue. Pour obtenir un certificat, j'ai utilisé Let's Encrypt.} valides).\newline
-
-Google Kubernetes Engine (GKE) permet de créer des clusters Kubernetes en quelques clics: l'utilisateur choisit un nom pour son cluster, la région dans laquelle le cluster sera déployé , et le nombre et la puissance des worker-nodes. En quelques minutes le cluster est alors configuré par Google et prêt à recevoir les premières requêtes.\newline
-
-Comme tout les services Gcloud, GKE est un service pay-as-you-go (facturation à l’utilisation), afin de débourser le minimun j'éteignais donc régulièrement le cluster afin de "consommer" le moins possible. Le fait d'éteindre le cluster entraînait une perte de la configuration du cluster et je devais recommencer à chaque fois. J'ai donc cherché un outils me permettant d'automatiser cette phase.
-
-\section*{Terraform}
-Terraform est un outil d'infrastructure-as-code, open-source, et développé par Hashicorp qui permet d'automatiser la gestion d'une insfrastructure cloud, de plateformes, et de services. Il permet d'automatiser la configuration de VMs, ou de la création d'environnement cloud. \newline
-
-Généralement, pour passer d'un état A à un état B, les outils semblables (tel que Chef ou Ansible) utilise un style de procédure où est décrit un code qui spécifie, étape par étape, comment atteindre un certain état final souhaité. Terraform (comme Puppet)  fonctionne différement, il repose sur un style plus déclaratif dans lequel un fichier contient le code qui spécifie l'état final souhaité. \newline
-
-Pour cela Terraform fonctionne en 3 phases. Dans la première phase (dite de code), le développeur décrit l'état souhaité de son cluster ou de sa VM au sein de un ou plusieurs fichiers. Dans un second temps (phase plan), Terraform va comparer l'état actuel du cluster avec celui décrit au sein des fichiers de la première phase. Enfin dans un dernier temps (phase apply), il va appliquer les changements au cluster afin de le faire tendre vers l'état désiré. Au cours de cette partie Terraform peut nous renvoyer des variables qu'il aura générée (le lien du Kubernetes dashboard par exemple).\newline
+Dans le cas du développeur qui veut pouvoir déployer rapidement ces applications, il est intéressant d'avoir accès à une offre Paas.
+\newpage
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Tableau}
-\includegraphics[scale=0.2]{Pictures/annexe/terraform-cloud.png}
+\renewcommand{\figurename}{Schéma}
+\includegraphics[scale=0.6]{Pictures/Comparaison/cloud/difference-cloud.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Schéma récapitulatif du fonctionnement de Terraform \newline}
+\caption[]{Différence entre offre Cloud Iaas, Saas et Paas \newline}
 \end{figure}
 
-Ces 3 phases sont facilités par la présence de modules (aussi appelés providers) fournit par la communauté et les fournisseurs cloud, afin de facilité l'interaction entre Terraform et la ressource que l'on veut modifier. On trouve donc un provider gcloud, AWS, (pour la configuration des clusters) mais aussi des providers Kubernetes (pour interagir avec l'API-server) ou un provider Helm afin de communiquer directement avec Helm.\newline
+\subsection*{Offre Cloud Marathon et Kubernetes}
+De part son succès, de nombreux provider cloud proposent une offre Kubernetes, parmi eux on peut citer : Microsoft Azure, Amazon EKS (Amazon Elastic Kubernetes Service), GKE (Google Kubernetes Engine), etc. Ces offres proposent de créer des clusters Kubernetes en quelques minutes seulement. Par exemple, il suffit de quelque clics (choix du nombre et du type des workers nodes, localisation du cluster et la version de Kubernetes) pour lancer un cluster Kubernetes dans GKE. Ici, on parle d'offre Paas (ou clés en main). En effet, une fois le cluster créé, le développeur peut directement y déployer ses applications.\\
 
-Grâce à Terraform nous avons pu écrire des scripts qui permettent de se créer un cluster Kubernetes pré-configuré et répondant a nos besoin en moins de 6 minutes, rejouable à l'infini et qui réponds à la logique devops. C'est à dire que l'ajout ou la modification d'une ressource ne relance pas toutes les phases et que l'ensemble du code peut donc être stocké dans un répertoire Git. Le répértoire contenant les codes Terraform du cluster GKE insee est disponible ici : \url{https://github.com/InseeFrLab/helm-charts}
+Pour le développeur qui veut tester Kubernetes sans avoir à lancer un cluster dans le cloud, de nombreuse solutions existent pour lancer un cluster Kubernetes en local : minikube avec virtualbox, k3s avec docker. Ces offres proposent des clusters Kubernetes déjà configurés avec un seul worker node, permettant au développeur de tester facilement les possibilités que peut offrir Kubernetes.\\
 
+Kubernetes centralise l'ensemble des providers cloud qui fournissent des solutions ici : \url{https://Kubernetes.io/fr/docs/setup/pick-right-solution/}. \\
 
+A l'inverse, pour Marathon il n'existe pas de solution Paas. Le seul moyen de lancer un cluster Mesos avec Marathon dans le cloud est de souscrire à une offre Iaas. Par la suite, l'utilisateur doit configurer ses machines, en y installant l'ensemble des briques Mesos ou en utilisant l'outil d'installation DC/OS. De la même façon, il est impossible de lancer un cluster Mesos avec Marathon en local sans devoir configurer l'ensemble de la sphère Mesos\footnote{\url{http://www.lordofthejars.com/2015/04/apache-mesos-marathon-and-java-ee.html} pour une utilisation en local}. Cette différence s'explique notamment par le fait que les utilisateurs de Mesos, n'utilisent pas ce dernier uniquement pour avoir Marathon comme framework. Le provider cloud n'a donc aucun intêret à proposer une offre packagée.\\
 
-\chapterimage{/chapter-image/Kubeapps.png}
-\chapter{Kubeapps une alternative à Onyxia ?}
-\label{kubeapps}
-\vspace{-2cm}
-Dans le monde de Kubernetes, il existe des applications permettant de simplifier le déploiement de Charts Helm. On citera notamment Kubeapps ou encore Rancher. Kubeapps est un Chart Helm qui permet de déployer une interface web permettant à son tour de déployer et de gérer des applications dans Kubernetes. Il permet d'ajouter des répertoires de Chart Helm (aussi bien public que privé) et de les déployer dans le cluster. Kubeapps permet également de gèrer, monter les versions, et supprimer les applications actuellement déployées dans le cluster. Cette application supporte également l'authentification OIDC ce qui nous permet d'utiliser Keycloak comme provider d'authentification.
-
-\begin{figure}[H]\centering
-\renewcommand{\figurename}{Graphique}
-\hspace{-1cm}
-\includegraphics[scale=0.10]{Pictures/onyxia/kubeapps.jpg}
-\captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Aperçus de l'interface de Kubeapps \newline}
-\end{figure}
-
-\paragraph{Architecture}
-Kubeapps est une application respectant l'architecture microservice. Elle est composée d'une ihm écrite en react/javascript (Kubeapps dashboard). Mais également d'une API écrite en Go (Kubeops), elle est en charge de la communication avec Helm 3 ou encore avec les différentes ressources Kubernetes (comme les AppRepositories ou les secrets).\\
-
-\paragraph{Verdict}
-Kubeapps permet donc de faire une grosse partie de ce que onyxia fait déja : lister des services et les installer dans le cluster, consulter leur configuration et y accéder. Cependant ce dernier ne permet pas de forcer certaines valeurs à la place de l'utilisateur (par exemple l'url du service),  de plus Kubeapps ne configure pas les services tout seul, c'est à l'utilisateur de saisir la configuration (pour un postgres il faudrait notamment que l'utilisateur choisissent son mdp, son url, la taille de la bdd associées etc...). Utiliser Kubeapps comme une alternative à Onyxia n'est donc pas possible sans modifier son code source. Cela impliquerait de modifier le code de kubeops (l'API) écrit en go, mais le rapport coût d'entrée et développement est relativement élevé, d'autant plus que le go n'est pas courant à l'Insee (ce serait pour l'Insee une application difficilement maintenable).\newline
-
-Une deuxième solution évoquée a été de faire interagir onyxia directement avec l'API de Kubeapps. En effet on pourrait déployer Kubeapps dans le cluster et faire dialoguer Onyxia avec Kubeapps. Cela permettrait, d'une part au développeur de se connecter à Kubeapps à l'aide d'un token Kubernetes et de pouvoir configurer son application tel qu'il le souhaite, d'autre part au statisticien d'utiliser Onyxia pour déployer des services configuré rapidement. Onyxia devra néanmoins être capable de forcer les values pour chaque déploiement. L'API de Kubeapps nous servirait donc a installer le Chart, à lister ceux déja déployer, et à les supprimer. 
-\begin{figure}[H]
-\renewcommand{\figurename}{Graphique}
-\hspace{-3cm}
-\includegraphics[scale=0.8]{Pictures/onyxia/Kubeapps.png}
-\captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Architecture onyxia + Kubeapps \newline}
-\end{figure}
-
-Cette solution n'a finalement pas été retenu, en effet faire reposer Onyxia sur Kubeapps n'est pas forcement quelque chose de souhaitable puisque les différents endpoints de Kubeapps peuvent être amenés à évoluer. Kubeapps devenant juste un intermédiaire entre Helm et Onyxia, le coût pour qu'Onyxia  puisse dialoguer directement avec Helm ne nous paraissait pas important au point de retenir cette solution.
-
-
-
+Par ailleurs, il peut être intéressant d'automatiser la phase de création d'un cluster Kubernetes ou DC/OS (voir annexe \ref{Terraform}). Il existe 2 principaux outils qui répondent à de tels besoin: Terraform et Ansible. Généralement, on pourra utiliser Terraform et/ou Ansible avec k8s alors que DC/OS ne sera compatible qu'avec Ansible.
 
 
 \chapterimage{/chapter-image/glossaire.png}
