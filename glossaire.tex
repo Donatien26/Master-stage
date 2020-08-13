@@ -56,7 +56,7 @@
 \newglossaryentry{Cgroups}
 {
     name=Cgroups : ,
-    description={cgroups (control groups) est une fonctionnalité du noyau Linux pour limiter, compter et isoler l’utilisation desressources (processeur, mémoire, utilisation disque, etc.)}
+    description={Cgroups (control groups) est une fonctionnalité du noyau Linux pour limiter, compter et isoler l’utilisation desressources (processeur, mémoire, utilisation disque, etc.)}
 }
 \newglossaryentry{Scalabilité}
 {
@@ -68,10 +68,17 @@
     name=Commit : ,
     description={Un commit est le fait d’enregistrer dans un outil de gestion de versions (par exemple GitLab) une nouvelle version d’un ensemble de fichiers}
 }
+
+\newglossaryentry{Push}
+{
+    name=Push : ,
+    description={Push, dans le cadre d'un outil de gestion de versions comme Git, signifie envoyer les modifications du répertoire local au répertoire distant (Git).}
+}
+
 \newglossaryentry{Pod}
 {
     name=Pod : ,
-    description={Un Pod est la plus petite unité logique de k8s, encapsule un ou plusieurs conteneurs (dans ce cas il partage lemême contexte) Un Pod est attaché à un node, son existence est temporaire, on peut facilement le répliquer sur un autrenode. Chaque Pod a une adresse IP virtuelle unique au sein du cluster ce qui permettra aux autres Pods du cluster decommuniquer avec ce dernier}
+    description={Un Pod est la plus petite unité logique de k8s. Il encapsule un conteneur applicatif. Un Pod est attaché à un node, son existence est temporaire, on peut facilement le répliquer sur un autre node. Chaque Pod a une adresse IP virtuelle unique au sein du cluster, ce qui permettra aux autres Pods du cluster de communiquer avec ce dernier}
 }
 \newglossaryentry{Node}
 {
@@ -81,7 +88,7 @@
 \newglossaryentry{Service}
 {
     name=Service : ,
-    description={Un service peut être défini comme un ensemble logique de Pods exposés en tant que service réseau. C’est unniveau d’abstraction au-dessus du Pod, qui fournit une adresse IP et un nom DNS unique pour un ensemble de Pods}
+    description={Un service peut être défini comme un ensemble logique de Pods exposés en tant que service réseau. C’est un niveau d’abstraction au-dessus du Pod, qui fournit une adresse IP et un nom DNS unique pour un ensemble de Pods}
 }
 \newglossaryentry{Deployment}
 {
@@ -96,7 +103,7 @@
 \newglossaryentry{Charts}
 {
     name=Charts : ,
-    description={ollection de fichiers YAML variabilisés décrivant des ressources qui, misent bout à bout, donnent une application déployable sur Kubernetes}
+    description={Collection de fichiers YAML variabilisés décrivant des ressources qui, misent bout à bout, donnent une application déployable sur Kubernetes}
 }
 \newglossaryentry{Releases}
 {
@@ -136,7 +143,7 @@
 \newglossaryentry{CloudNative}
 {
     name=CloudNative : ,
-    description={ Le "Cloud native" est une approche permettant de construire et d'exécuter des applications qui exploitent pleinement les avantages du modèle de l'informatique dans le cloud. Les technologies telles que les conteneurs, les micro-services, les apis Rest répondent a ce besoin}
+    description={ Le "Cloud native" est une approche permettant de construire et d'exécuter des applications qui exploitent pleinement les avantages du modèle de l'informatique dans le cloud. Les technologies telles que les conteneurs, les micro-services, les APIs REST répondent a ce besoin}
 }
 \newglossaryentry{Stateless}
 {
@@ -151,18 +158,15 @@
 \newglossaryentry{Namespace}
 {
     name=Namespace : ,
-    description={Un namespace est une partition virtuelle d'un cluster kubernetes associés à un groupe d'utilisateur}
+    description={Un namespace est une partition virtuelle d'un cluster Kubernetes associée à un groupe d'utilisateur}
 }
+
 \newglossaryentry{Pipeline}
 {
     name=Pipeline. : ,
     description={Au sein de Gitlab, un pipeline est un ensemble de tâches s'exécutant les unes à la suite des autres}
 }
-\newglossaryentry{Machine virtuelle}
-{
-    name=Machine virtuelle : ,
-    description={...}
-}
+
 
 \newglossaryentry{Hyperviseur}
 {
@@ -179,7 +183,7 @@
 \newglossaryentry{Job}
 {
     name=Job : ,
-    description={..}
+    description={Dans le cadre de Gitlab, un job est un ensemble de tâches qui ont lieu durant un pipeline. Dans le cadre de Kubernetes, un job désigne le fait de déployer une application dans l'orchestrateur.}
 }
 
 \newglossaryentry{JSON}
@@ -200,4 +204,35 @@
     description={Une requête POST est une requête WEB permettant d'envoyer du contenu à un serveur}
 }
 
+\newglossaryentry{API}
+{
+    name=API : ,
+    description={API signifie Application Programming Interface ou interface de programmation d’application. Une API est accessible par le Web et permet d’établir des connexions entre plusieurs applications pour échanger des données}
+}
 
+\newglossaryentry{hub}
+{
+    name=Hub : ,
+    description={Plateforme regroupant l’ensemble des ressources sur un sujet précis au même endroit}
+}
+\newglossaryentry{patch}
+{
+    name=Patch : ,
+    description={Correctif}
+}
+\newglossaryentry{Pair Programming}
+{
+    name=Pair Programming : ,
+    description={le pair programming est une technique de développement logiciel agile dans laquelle deux programmeurs travaillent ensemble sur un même poste de travail. L’un, le driver, écrit le code tandis que l’autre, l’observateur, examine chaque ligne de code au fur et à mesure qu’elle est tapée. Les deux programmeurs changent fréquemment de rôle}
+}
+
+\newglossaryentry{Extreme Programming}
+{
+    name=Extreme Programming : ,
+    description={Méthode de développement d'application consistant à développer une application par sprint très court.}
+}
+\newglossaryentry{YAML}
+{
+    name=YAML : ,
+    description={YAML (Yet Another Markup Language) est un format de représentation de données.}
+}
