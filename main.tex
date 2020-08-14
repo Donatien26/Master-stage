@@ -381,7 +381,7 @@ C'est par la suite que l'on distingue le modèle en push du modèle en pull.
 
 Dans le modèle en push, lorsque le répertoire contenant la configuration est mis à jour, un nouveau pipeline se lance afin d'envoyer la nouvelle configuration vers l'orchestrateur.\\
 
-L'application qui push les changements vers l'orchestrateur joue alors le rôle de l'opérateur. Avec ce modèle, on ne peut cependant pas distinguer (sans monitoring ou investigation manuelle) une divergence entre la version s'exécutant dans le cluster et la version du répértoire git. 
+L'application qui envoie (push) les changements vers l'orchestrateur joue alors le rôle de l'opérateur. Avec ce modèle, on ne peut cependant pas distinguer (sans monitoring ou investigation manuelle) une divergence entre la version s'exécutant dans le cluster et la version du répértoire git. 
 
 \subsection{Le modèle en pull}
 \begin{figure}[H]
@@ -392,7 +392,7 @@ L'application qui push les changements vers l'orchestrateur joue alors le rôle 
 \caption[]{Schéma simplifié du modèle pull de GitOps \newline}
 \end{figure}
 
-Dans le cadre du modèle en pull, un opérateur surveille en continue le répertoire contenant la configuration de l'application. Cet opérateur détecte alors une différence entre l'état souhaité et l'état courant. Il applique alors un patch\footnote{un correctif} afin de rétablir l'état du cluster vers celui du répertoire Git. Ainsi, si une opération est faite manuellement directement dans le cluster, l'opérateur va remettre en conformité l'état du cluster avec l'état souhaité.
+Dans le cadre du modèle en pull, un opérateur surveille en continue le répertoire contenant la configuration de l'application. Cet opérateur détecte alors une différence entre l'état souhaité et l'état courant. Il récupère l'état souhaité (pull), Il applique alors un patch\footnote{un correctif} afin de rétablir l'état du cluster vers celui du répertoire Git. Ainsi, si une opération est faite manuellement directement dans le cluster, l'opérateur va remettre en conformité l'état du cluster avec l'état souhaité.
 
 \section{Pourquoi choisir d'utiliser des pratiques GitOps ? }
 \begin{itemize}
@@ -440,14 +440,14 @@ Les solutions ci-dessus sont majoritairement orientées Kubernetes. En effet, il
 \end{interrupt}
 \section{Argo: Vers une architecture conteneurisée en production}
 
-ArgoCD suit le modèle en pull GitOps, qui consiste à utiliser les dépôts Git comme source de vérité pour définir l'état d'application souhaité. C'est un projet relativement jeune (lancé en 2017) mais qui fait parti des outils recommandés par la CNCF dans sa carte de route pour concevoir une plateforme cloud \footnote{\url{https://github.com/cncf/trailmap/blob/master/CNCF_TrailMap_latest.pdf}}. C'est également l'outil utilisé par le Ministère de l'Intérieur pour la mise en place de sa plateforme cloud.  Argo possède son Chart Helm qui lui permet d'être facilement déployable dans Kubernetes et il ne fonctionne qu'avec des ressources Kubernetes. Argo a été choisi pour la plateforme de l'innovation car il permet notamment l'authentification OIDC\footnote{Authentification de type open-id connect, authentification à jeton} et la gestion de droits et aussi car il propose une interface graphique. \newline
+ArgoCD suit le modèle en pull GitOps, qui consiste à utiliser les dépôts Git comme source de vérité pour définir l'état d'application souhaité. C'est un projet relativement jeune (lancé en 2017) mais qui fait parti des outils recommandés par la CNCF dans sa carte de route pour concevoir une plateforme cloud \footnote{\url{https://github.com/cncf/trailmap/blob/master/CNCF_TrailMap_latest.pdf}}. C'est également l'outil utilisé par le Ministère de l'Intérieur pour la mise en place de sa plateforme cloud.  ArgoCD possède son Chart Helm qui lui permet d'être facilement déployable dans Kubernetes et il ne fonctionne qu'avec des ressources Kubernetes. ArgoCD a été choisi pour la plateforme de l'innovation car il permet notamment l'authentification OIDC\footnote{Authentification de type open-id connect, authentification à jeton}, la gestion de droits et il propose une interface graphique. \newline
 
-ArgoCD permet d'automatiser le déploiement d'application dans les environnements cibles spécifiés. ArgoCD est un contrôleur Kubernetes qui surveille en permanence les applications fonctionnant dans le cluster. Il les compare à l'état défini dans le dépôt Git. S'il détecte une déviation, il marque une application comme étant "OutOfSync"\footnote{Perte de la synchronisation} (indiquant que le cluster ne reflète pas actuellement la branche master du dépôt) et le cas échéant la resynchronise avec le répertoire Git.  ArgoCD est compatible avec plusieurs types de manifestes Kubernetes: des templates d'application avec kustomize, des Charts Helm, des applications ksonnet, des fichiers jsonnet, ou encore directement des fichiers yaml.\newline
+ArgoCD permet d'automatiser le déploiement d'applications dans les environnements cibles spécifiés. ArgoCD est un contrôleur Kubernetes qui surveille en permanence les applications fonctionnant dans le cluster. Il les compare à l'état défini dans le dépôt Git. S'il détecte une déviation, il marque une application comme étant "OutOfSync"\footnote{Perte de la synchronisation} (indiquant que le cluster ne reflète pas actuellement la branche master du dépôt) et le cas échéant il la resynchronise avec le répertoire Git.  ArgoCD est compatible avec plusieurs types de manifestes \footnote{Un manifeste est un fichier JSON ou YAML qui permet de déclarer le type d'application à exécuter et le nombre de réplicas nécessaires pour exécuter un système sain.} Kubernetes: des templates d'application avec Kustomize, des Charts Helm, des applications ksonnet, des fichiers Jsonnet, ou encore directement des fichiers YAML.\newline
 
 
 
-ArgoCD propose plusieurs moyens pour communiquer avec lui : une interface, une ligne de commande (argoCD), il expose également une API compatible REST et gRPC\footnote{gRPC est un framework RPC (Remote procedure call) open source initialement développé par Google. Le RPC, Remote procedure call, est un protocole réseau permettant de faire des appels de procédures sur un ordinateur distant à l'aide d'un serveur d'applications.}. Il peut, dans le cas où l'on souhaite réduire le temps entre chaque synchronisation du répertoire Git, être configuré pour recevoir des notifications git. Par ailleurs, argoCD peut envoyer des notifications dans d'autres applications telles que Slack (pour par exemple avertir d'une montée de version ou qu'une application n'est plus synchronisée). Il est également capable de gérer l'état des applications dans plusieurs clusters Kubernetes en étant déployé dans un seul cluster.
-L'interface graphique d'argo permet notamment d'avoir une vue explosée de nos déploiement. Ci contre, dans l'exemple d'Onyxia, on retrouve toutes les entités de Kubernetes : ingress, Pod, deployment, Service, role-binding,... On a également accès aux manisfestes, logs de chaque composant, historique de déploiement, ainsi que la possibilité de faire des rollbacks\footnote{retour sur une version précédente de l'application} en un clic.
+ArgoCD propose plusieurs moyens pour communiquer avec lui : une interface, une ligne de commande (ArgoCD), il expose également une API compatible REST et gRPC\footnote{gRPC est un framework RPC (Remote procedure call) open source initialement développé par Google. Le RPC est un protocole réseau permettant de faire des appels de procédures sur un ordinateur distant à l'aide d'un serveur d'applications.}. Il peut, dans le cas où l'on souhaite réduire le temps entre chaque synchronisation du répertoire Git, être configuré pour recevoir des notifications Git. Par ailleurs, ArgoCD peut envoyer des notifications dans d'autres applications telles que Slack (pour avertir d'une montée de version ou qu'une application n'est plus synchronisée par exemple). Il est également capable de gérer l'état des applications dans plusieurs clusters Kubernetes en étant déployé dans un seul cluster.
+L'interface graphique d'ArgoCD permet notamment d'avoir une vue explosée de nos déploiements. Sur la capture d'écran~\ref{onyxia-argo} de l'exemple du déploiement d'Onyxia, on retrouve toutes les entités de Kubernetes : ingress, Pod, deployment, Service, role-binding,... On a également accès aux manisfestes, logs de chaque composant, historique de déploiement, ainsi que la possibilité de faire des rollbacks\footnote{Un rollback est un retour sur une version précédente de l'application.} en un clic.
 
 \begin{figure}[H]
 \renewcommand{\figurename}{Schéma}
@@ -463,6 +463,7 @@ L'interface graphique d'argo permet notamment d'avoir une vue explosée de nos d
 \includegraphics[scale=0.5,trim={0 0 5cm 0},clip]{Pictures/CI-CD/Onyxia-argo.PNG}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Déploiement de Onyxia dans Argo \newline}
+\label{onyxia-argo}
 \end{figure}
  
 
@@ -470,31 +471,35 @@ L'interface graphique d'argo permet notamment d'avoir une vue explosée de nos d
 \section{Le GitOps: oui mais pour quel projet ?}
 Avant de se lancer dans le GitOps, il faut d'abord que notre projet réponde à certains critères. En effet, les problèmes les plus fréquents dans un cluster sont les suivants: \\
 \begin{itemize}
-    \item Le downtime : Si un conteneur (ou pire un worker-node) contenant une application dysfonctionne pour une raison quelconque, il faut que l'orchestrateur relance cette application. Durant ce laps de temps, l'application peut être indisponible. Un moyen de palier à ce problème est d'avoir plusieurs répliques de notre application répartis sur plusieurs nodes, pour qu'en cas de bug d'une des répliques, les autres prennent le relais. Il est donc interdit à l'application de posséder des données en local. \\
-    \item La surcharge : Il peut arriver que le cluster soit en surcharge : suite à la perte d'un node obligeant le déplacement des apps sur un autre node (pertes de ressources entraînant une surcharge), ou encore que l'ensemble des  applications consomme toutes les ressources disponibles. Pour cela on a deux solutions : prévoir large (c'est-à-dire surdimensionner le cluster mais cela entraîne une non utilisation des ressources) ou bien faire de l'autoscaling (c'est-à-dire laisser automatiquement le cluster démarrer des worker-nodes ou des conteneurs afin de répondre à la charge, le problème est que cela peut coûter cher). \footnote{C'est d'ailleurs à cause de cette raison que Amazon s'est initialement converti en fournisseur cloud : leur serveur était surchargé pendant certaines périodes de l'année (fêtes de fin d'année). Ils ont donc décidé de louer les ressources qu'ils n'utilisaient pas le reste de l'année, afin de rentabiliser leur infrastructure.}\\
-    \item La perte de donnée : de la même façon que précédemment, aucune donnée ne doit être attachée à un conteneur. Il faut donc, dans le cas du stockage de données (comme par exemple pour une base de données), avoir une certaine redondance des données et/ou pouvoir les externaliser. Les applications stateless ne possèdent aucune donnée en local, tout leur état étant déporté sur une autre application.\\
+    \item Le downtime : Si un conteneur (ou pire un worker node) contenant une application dysfonctionne pour une raison quelconque, il faut que l'orchestrateur relance cette application. Durant ce laps de temps, l'application peut être indisponible. On parle alors de downtime. Un moyen de palier à ce problème est d'avoir plusieurs répliques de notre application réparties sur plusieurs nodes, pour qu'en cas de bug d'une des répliques, les autres prennent le relais. Il est donc interdit à l'application de posséder des données en local. \\
+    
+    \item La surcharge : Il peut arriver que le cluster soit en surcharge suite à une trop forte demande des utilisateurs, ou encore suite la perte d'un node obligeant le déplacement des applications sur un autre node (perte de ressources entraînant une surcharge). Une surcharge peut également avoir lieu lorsque l'ensemble des  applications consomme toutes les ressources disponibles. Pour cela on a deux solutions : prévoir large (c'est-à-dire surdimensionner le cluster, mais cela entraîne une non utilisation des ressources) ou bien faire de l'autoscaling (littéralement mise à l'échelle automatique, c'est-à-dire laisser automatiquement le cluster démarrer des worker-nodes ou des conteneurs afin de répondre à la charge, le problème est que cela peut être coûteux). \footnote{C'est d'ailleurs à cause de cette raison que Amazon s'est initialement converti en fournisseur cloud : leur serveur était surchargé pendant certaines périodes de l'année (fêtes de fin d'année). Ils ont donc décidé de louer les ressources qu'ils n'utilisaient pas le reste de l'année, afin de rentabiliser leur infrastructure.} Dans tout les cas l'application se doit donc d'être scalable\footnote{(littéralement mise à l'échelle) Une application est dite scalable si elle possède la capacité à maintenir ses fonctionnalités et ses performances en cas de forte demande (montée en charge). Elle doit être scalable verticalement (augmentation des ressources allouées :  CPU, mémoire...) et scalable horizontalement (augmentation du nombre de répliques de l'application), le premier étant plus facile à garantir que le second.}.\\
+    \footnote{Désigne la capacité d'un produit à s'adapter à un changement d'ordre de grandeur de la demande (montée en charge).}
+    \item La perte de donnée : de la même façon que précédemment, aucune donnée ne doit être attachée à un conteneur. Il faut donc, dans le cas du stockage de données (comme pour une base de données par exemple), avoir une certaine redondance des données et/ou pouvoir les externaliser. Les applications stateless\footnote{(ou sans état) Désigne une application qui ne sauvegarde pas les données de l'utilisateur générées lors d'une session pour les utiliser lors de la session suivante avec cet utilisateur} ne possèdent aucune donnée en local, tout leur état étant déporté sur une autre application.\\
 \end{itemize}
 
 On a alors besoin d'avoir des applications cloud-Native. La CNCF donne la définition suivante du cloud-native: \\
 
 \textit{"Les technologies cloud-native permettent aux entreprises de construire et d'exploiter des applications élastiques dans des environnements modernes et dynamiques comme des clouds publics, privés ou bien hybrides. Les conteneurs, les services maillés, les micro services, les infrastructures immuables et les API REST illustrent cette approche. Ces techniques permettent la mise en œuvre de systèmes faiblement couplés, à la fois résistants, pilotables et observables. Combinés à un robuste système d'automatisation, ils permettent aux ingénieurs de procéder à des modifications impactantes, fréquemment et de façon prévisible avec un minimum de travail."} \\
 
-Le cloud impose donc de nouvelles manières de développer tel que les microservices, l'event sourcing, le nosql, l'utilisation d'api REST, etc. Les applications doivent être scalables et stateless. Selon une étude réalisée par Sysdig \footnote{\url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}, 25\% des conteneurs s'exécutant dans un cluster ont une durée de vie inférieure à 10 secondes. Une application monolithique qui stocke ses données en session n'est donc pas adaptée à un déploiement dans le cloud.  \\
+Le cloud impose donc de nouvelles manières de développer telles que les microservices, l'event sourcing, le nosql, l'utilisation d'API REST, etc. Les applications doivent aussi être scalables et stateless. Selon une étude réalisée par Sysdig \footnote{\url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}, 25\% des conteneurs s'exécutant dans un cluster ont une durée de vie inférieure à 10 secondes. Une application monolithique\footnote{Une application « monolithique » est une application constituée d'un seul bloc. Une application monolithique est conçue pour être autonome ; ses composants sont interconnectés et interdépendants plutôt qu'associés de manière flexible comme dans le cas des programmes modulaires.} qui stocke ses données en session n'est donc pas adaptée à un déploiement dans le cloud.\\
 
 
 
 \chapterimage{/chapter-image/onyxia.png}
-\chapter{Onyxia: des services en self-déploiement}
+\chapter{Des services en self-déploiement}
 \vspace{-2cm}
-Afin de mettre en place un DataLab, il peut être bénéfique de posséder une plateforme permettant de déployer des services de notre choix, de se former sur ce service, de pouvoir le jeter, de recommencer, tout cela rapidement et facilement. L'utilisation d'une architecture conteneurisée semble être la solution. Kubernetes propose une application Kubeapps ( voir annexe \ref{kubeapps}) mais elle ne propose pas l'auto-configuration des services. Cette solution n'est pas compatible avec Marathon pour qui il n'existe aucune autre solution similaire.\\
+Afin de mettre en place un DataLab, il peut être bénéfique de posséder une plateforme permettant de déployer des services de notre choix, de pouvoir y accéder et les utiliser, de pouvoir les arrêter (ou les supprimer), et de recommencer, tout cela rapidement et facilement. L'utilisation d'une architecture conteneurisée semble être la solution.\\
 
-Puisque le premier choix de l'Insee a été d'utiliser Marathon comme orchestrateur de conteneur, la Diit a développer une application, Onyxia, répondant au même besoin que kubeapps mais en rajoutant l'auto-configuration des services. Cette solution n'est  compatible qu'avec Marathon. Au cours de mon stage j'ai ajouté le support de Kubernetes dans Onyxia. A partir de cette expérience, nous allons comparer ce que les deux orchestrateurs facilitent (ou pas) dans le cadre d'une utilisation pour du service à la demande.
+Kubernetes propose une application Kubeapps (voir annexe \ref{kubeapps}) permettant de répondre à cette problématique. Cette application permet de déployer des applications à partir de Chart Helm, mais l'utilisateur est obligé de configurer lui même les applications avant leur déploiement. Kubeapps ne propose pas l'auto-configuration des services qui est pourtant nécessaire pour un public non spécialiste (la configuration de certains service peut être difficile à réaliser). De plus, cette solution n'est pas compatible avec Marathon, pour qui il n'existe aucune autre solution similaire.\\
+
+Puisque le premier choix de l'Insee a été d'utiliser Marathon comme orchestrateur de conteneur, la Diit a développé une application nommée Onyxia, répondant aux mêmes besoins que Kubeapps, mais en rajoutant l'auto-configuration des services. Cette solution n'est compatible qu'avec Marathon. Au cours de mon stage, j'ai ajouté le support de Kubernetes dans Onyxia. A partir de cette expérience, nous allons comparer ce que les deux orchestrateurs facilitent (ou pas) dans le cadre d'une utilisation pour du service à la demande.
 
 \section{Fonctionnement d'Onyxia}
-Onyxia est une application composée de deux parties : Onyxia-api (une API java pour les traitements) et Onyxia-ui (une interface React pour interagir avec l'utilisateur). Onyxia est une application que l'on qualifie de cloud-native, elle respecte l'architecture micro-service, elle repose sur une API RESTet elle s'exécute dans des conteneurs. Elle est aussi stateless\footnote{Une application Stateless est une application qui ne sauvegarde pas les données de l'utilisateur générées lors d'une session pour les utiliser lors de la session suivante avec cet utilisateur.} et scalable\footnote{Désigne la capacité d'un produit à s'adapter à un changement d'ordre de grandeur de la demande (montée en charge)}.\\
+Onyxia est une application composée de deux parties : Onyxia-API (une API Java pour les traitements) et Onyxia-UI (une interface React\footnote{React est une bibliothèque JavaScript dont le but est d'aider à la conception d'application monopage.} pour interagir avec l'utilisateur). Onyxia est une application que l'on qualifie de cloud-native, elle respecte l'architecture micro-service, elle repose sur une API REST et elle s'exécute dans des conteneurs. Elle est aussi stateless et scalable.\\
 
 
-L'application permet à l'utilisateur non connecté (non authentifié par l'application) d'accéder aux autres services proposés par l'innovation, on citera notamment rocket-chat (messagerie instantanée), minIO (stockage), Gitlab... L'utilisateur non connecté peut également consulter les catalogues de services à la demande que proposent Onyxia. L'utilisateur connecté peut lancer un service à la demande, le configurer (par exemple lancer un vs-code préconfigurer pour faire du python). Cet utilisateur peut aussi stocker des données. Onyxia s'interface avec minIO pour y uploader les données de l'utilisateur.\\
+L'application permet à l'utilisateur non connecté (non authentifié par l'application) d'accéder à d'autres services proposés par l'innovation, on citera notamment rocket-chat (messagerie instantanée), minIO (stockage), Gitlab... L'utilisateur non connecté peut également consulter les catalogues de services à la demande que propose Onyxia. L'utilisateur connecté peut lancer un service à la demande, le configurer (par exemple lancer un VScode préconfiguré pour faire de la programmation en Python). Cet utilisateur peut aussi stocker des données. Onyxia s'interface avec minIO pour y stocker les données de l'utilisateur.\\
 \begin{wrapfigure}[20]{l}{0.65\textwidth}
     \renewcommand{\figurename}{Diagramme}
     \includegraphics[scale=0.7]{Pictures/onyxia/onyxia-cu.PNG}
@@ -503,18 +508,16 @@ L'application permet à l'utilisateur non connecté (non authentifié par l'appl
 
 La spécifité d'Onyxia est que l'ensemble des services à la demande qu'elle offre aux utilisateurs sont pré-configurés. Aucune configuration d'un point de vue technique n'est demandée à l'utilisateur. En effet, lors d'un déploiement, Onyxia agrège trois sources de données afin de configurer le service de l'utilisateur. \\
 
-Onyxia-ui fournit des données provenant de deux sources : les données saisies par l'utilisateur (la mémoire ou le nombre de CPU alloué pour le service) et les données permettant l'accès aux autres services (la configuration git, vault et/ou minIO). Onyxia-api apporte, elle aussi, des informations comme le choix de l'URL du futur service déployé\footnote{Si deux utilisateurs possédaient chacun un service différent mais avec la même URL, les utilisateurs auraient tantôt accès à un service tantôt à l'autre de manière totalement aléatoire}.\\
+Onyxia-UI fournit des données provenant de deux sources : les données saisies par l'utilisateur (la mémoire ou le nombre de CPU alloué pour le service) et les données permettant l'accès aux autres services (la configuration git, vault et/ou minIO). Onyxia-API apporte, elle aussi, des informations comme le choix de l'URL du futur service déployé\footnote{Si deux utilisateurs possédaient chacun un service différent mais avec la même URL, les utilisateurs auraient tantôt accès à un service, tantôt à l'autre, de manière totalement aléatoire.}.\\
 
-Ensuite, Onyxia dispose pour chaque service d'un template qui le décrit. Ce template est alors rempli à l'aide des valeurs précédemment créées.\\
+Ensuite, Onyxia-API dispose pour chaque service d'un squelette permettant de le déployer. Ce squelette est alors rempli à l'aide des valeurs précédemment créées.\\
 
-Enfin, si le lancement du service n'est pas une simulation \footnote{En effet, onyxia permet à ces utilisateurs de lancer une application en mode simulation pour permettre aux personnes les plus motivées de découvrir la configuration de leurs services}, Onyxia envoie le déploiement à l'orchestrateur, qui va désormais s'occuper de déployer, et de maintenir en vie le service jusqu'à son extinction.
+Enfin, si le lancement du service n'est pas une simulation \footnote{En effet, onyxia permet à ces utilisateurs de lancer une application en mode simulation pour permettre aux personnes les plus motivées de découvrir la configuration de leurs services.}, Onyxia envoie le déploiement à l'orchestrateur, qui va désormais s'occuper de déployer et de maintenir en vie le service jusqu'à son extinction.
 
-Ce workflow est pour le moment uniquement réalisable avec Marathon. Au cours de cette partie nous verrons ce que Kubernetes implique comme modification dans les trois phases suivantes:
-\begin{itemize}
-    \item Phase 1 : Lecture et affichage des catalogues
-    \item Phase 2 : Lancer un service et y ajouter la configuration.
-    \item Phase 3 : Récupérer mes services, accèder à leurs configurations, et pouvoir les arrêter.
-\end{itemize}
+Ce workflow\footnote{Un workflow, ou « flux de travaux » ou encore « flux opérationnel » en français, est la représentation d'une suite de tâches ou opérations effectuées par une personne, un groupe de personnes, une application,... } est pour le moment uniquement réalisable avec Marathon et repose sur l'utilisation des Universes.\\
+
+
+
 
 \begin{figure}[H]
 \renewcommand{\figurename}{Diagramme}
@@ -527,11 +530,10 @@ Ce workflow est pour le moment uniquement réalisable avec Marathon. Au cours de
 
 
 \section{Onyxia : Marathon et/ou Kubernetes ?}
-Nous ne traiterons pas des solutions techniques mises en place (car elles n'ont pas grand intérêt) mais plutôt des points communs entre les deux solutions et des difficultés rencontrées, au cours de l'implémentation de Kubernetes dans Onyxia. Dans un premier temps, nous avions évoqué d'interfacer Onyxia avec Kubeapps un Chart Helm permettant de déployer des Charts Helm dans un cluster Kubernetes (voir en annexe \ref{kubeapps} pour plus de détails), mais la solution n'a finalement pas été retenue.\newline
+Nous ne traiterons pas des solutions techniques mises en place (car elles n'ont pas grand intérêt), mais plutôt des points communs entre les deux solutions et des difficultés rencontrées, au cours de l'implémentation de Kubernetes dans Onyxia. Dans un premier temps, nous avions évoqué d'interfacer Onyxia avec Kubeapps un Chart Helm permettant de déployer des Charts Helm dans un cluster Kubernetes (voir en annexe \ref{kubeapps} pour plus de détails), mais la solution n'a finalement pas été retenue.\newline
 
-Nous avons choisi l'outil Helm pour être l'équivalent de Universe dans le cadre de Kubernetes.
+Nous avons choisi l'outil Helm pour être l'équivalent de Universe dans le cadre de Kubernetes. Ce choix a été fait pour deux raisons : le nombre de charts Helm déja existant est conséquent, et les applications qui rendent un service équivalent (Kubeapps, Rancher,...) reposent sur cet outil. 
 \subsection{Phase 1: Afficher des catalogues}
-\subsubsection{Points communs et différences}
 Au cours de cette première partie, nous allons comparer le format Universe et le format Helm dans le but d'en extraire des informations communes aux deux formats de templating. Si l'on compare la description du Universe.json \footnote{\url{https://Inseefrlab.github.io/Universe-Datascience/universe.json}} avec celle du index.yaml du répertoire Helm \footnote{\url{https://Inseefrlab.github.io/helm-charts-datascience/index.yaml}}, on remarque que les deux sont à peu de chose prêt composé d'une liste de paquets\footnote{L'universe n'est constitué que d'un tableau de paquets, alors que le index.yaml contient en plus la date de génération du fichier et la version de l'API Kubernetes avec laquelle ce Helm repository est compatible.}. \\ 
 
 % \begin{wrapfigure}[21]{r}{0.4\textwidth}
@@ -578,10 +580,10 @@ Au cours de cette première partie, nous allons comparer le format Universe et l
 % \end{tabular}
 % \caption[]{}
 % \end{wrapfigure}
-
+\vspace{-1cm}
 Dans la description des paquets, certains attributs sont communs comme le nom du paquet, la description ou encore la version.\newline
 
-Il y a cependant une nette différence au niveau des fichiers de configurations et des templates. En effet, dans le cadre d'un paquet Universe, le template ainsi que la configuration sont directement dans la description du paquet alors que pour le paquet Helm (Chart), le fichier de templating ainsi que la configuration sont dans un tar disponible sur l'URL qui accompagne le paquet. \\
+Il y a cependant une nette différence au niveau des fichiers de configurations et des templates. En effet, dans le cadre d'un paquet Universe, le template ainsi que la configuration (par défaut) sont directement dans la description du paquet alors que pour le paquet Helm (Chart), le fichier de templating ainsi que la configuration sont dans un fichier compressé disponible sur l'URL qui accompagne le paquet. \\
 
 
 
@@ -597,7 +599,7 @@ Il y a cependant une nette différence au niveau des fichiers de configurations 
 \begin{tabular}{@{}lccl@{}}
 \toprule
 Attributs        & \multicolumn{1}{l}{Helm} & \multicolumn{1}{l}{Universe} & Description                                                                 \\ \midrule
-name             & x                        & x                            & nom du paquet                                                               \\
+name             & x                        & x                            & Nom du paquet                                                               \\
 description      & x                        & x                            & Description du paquet                                                       \\
 version          & x                        & x                            & Version du paquet                                                           \\
 marathon         &                          & x                            & Objet contenant l'ensemble des templates du paquet (marathon.mustache.json) \\
@@ -611,7 +613,7 @@ resource         &                          & x                            & Con
 \label{tab:my-table}
 \end{table}
 
-
+\vspace{-0.5cm}
 Pour avoir le même comportement (entre Helm et Universe), pour chaque Chart nous téléchargeons le fichier tgz du Chart (à partir de l'URL) et nous y récupérons le fichier de configuration. Ainsi, chaque paquet (Universe ou Helm) a au moins un nom, une description, une version et un fichier de configuration par défaut. Pour un paquet Universe nous stockons en plus le template de l'application. Cette étape n'est pas nécéssaire pour un Chart Helm, nous ajoutons juste le Chart a ceux connu par Helm (\textit{helm repo add...}).
 \vspace{-0.5cm}
 \begin{interrupt}
@@ -627,10 +629,9 @@ Un répertoire Helm ou Universe est vu comme un catalogue. Chacun de ces catalog
 L'ensemble des catalogues proposé par Onyxia est décrit dans un fichier json. Ce fichier comporte notamment le type du catalogue (Universe ou Helm) et l'URL sur lequel se trouve le fichier décrivant le catalogue (respectivement le universe.json ou le index.yaml). Le workflow ci-contre s'exécute alors périodiquement afin d'ajouter les différents paquets dans Onyxia.
 
 \subsubsection{Difficultés rencontrées}
-Au cours de cette première partie, la principale difficulté est venu des catalogues Helm. En effet, DC/OS propose une dépendance Maven permettant de convertir le fichier universe.json en objets Java. Il n'existe cependant pas d'équivalent pour Helm. Il a donc fallu implémenter à la main les classes pour réaliser la conversion de l'index.yaml en objet Java. Il a également fallu exécuter des commandes Helm (notamment pour l'ajout du répertoire dans Helm). Je n'ai trouvé aucune dépendance Java qui le permettait. Il a donc fallu ajouter à Onyxia un module permettant d'interagir avec Helm, par l'intermédiaire d'exécution de lignes de commande depuis java, ce qui a aussi impliqué d'ajouter Helm et Kubernetes à l'image docker d'Onyxia.
+Au cours de cette première partie, la principale difficulté est venu des catalogues Helm. En effet, DC/OS propose une dépendance Maven permettant de convertir le fichier universe.json en objets Java. Il n'existe cependant pas d'équivalent pour Helm. Il a donc fallu implémenter à la main les classes pour réaliser la conversion de la description du répertoire Helm (index.yaml) en objet Java. Il a également fallu exécuter des commandes Helm (notamment pour l'ajout du répertoire dans Helm). Je n'ai trouvé aucune dépendance Java qui le permettait. Il a donc fallu ajouter à Onyxia un module permettant d'interagir avec Helm, par l'intermédiaire d'exécution de lignes de commande depuis java, ce qui a aussi impliqué d'ajouter Helm et Kubernetes à l'image docker d'Onyxia.
 
 \subsection{Phase 2: Lancer des services et les configurer}
-\subsubsection{Points commun et différences}
 Cette partie débute au moment où l'utilisateur se retrouve sur la page de configuration de son service sur Onyxia. Que le service proviennent d'un paquet Universe ou Helm, l'expérience utilisateur est la même mais l'implémentation diffère. En effet, lors de la création d'un service on a le workflow \footnote{On ne fait pas apparaître ici comment Onyxia-ui récupère les informations techniques de l'utilisateur (Vault, Git, Minio)} suivant : 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Diagramme}
@@ -638,31 +639,40 @@ Cette partie débute au moment où l'utilisateur se retrouve sur la page de conf
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption{Workflow du déploiement d'un service \newline}
 \end{figure}
-Dans le cas Helm ou Universe, Onyxia-api reçoit un objet de type Map<String,Object> (une liste de clé-valeur) contenant la configuration du service. Cependant, il reste certains paramètres à injecter, par exemple : l'url, le nom du service, etc... c'est le rôle des admissions-controller.\\
-Les admissions-controller parcourent l'ensemble de la Map contenant la configuration, et y ajoute la clé et la valeur du paramètre qu'ils auront générés. Ainsi, dans le cas Universe et Helm, on ne possède pas les mêmes admissions-controller : \begin{itemize}
-    \item Pour Universe, on a un admission-controller qui va gérer le nom du service. En effet, Marathon ne possède pas la notion de namespace, mais plutôt de dossier \footnote{L'innovation a fait le choix que les services demandés par une personne se situent dans l'arborescence suivante users/idep/.} et ce dossier est déterminé en fonction de l'id du service. On doit donc injecter User-idep- dans le nom du service. Par ailleurs, un dossier ne peut pas contenir deux noms de service identiques, il faut donc randomiser le nom du service, l'admission controller ajoute un nombre aléatoire à la suite du nom du service (pour vs-code on aurait par exemple users/idep/vscode-1234). Enfin, un autre admission-controller genère l'URL d'accès au service en fonction de l'idep du nom de service, du domaine sur lequel Onyxia est configuré pour déployer.\footnote{Pour éviter les doublons, ce générateur d'URLs ajoute un nombre aléatoire à l'URL.}
-    \item De son coté, Helm ne nécessite qu'un seul admission-controller : celui de l'URL. Il repose sur le même générateur que Marathon, mais cela ne se traduit pas par la même clé dans la map des valeurs (normal puisque Helm et Universe possèdent une syntaxe différente).
-\end{itemize}
 
+\vspace{-0.5cm}
+Dans le cas Helm ou Universe, Onyxia-UI envoie la configuration du service à Onyxia-API. Onyxia-API reçoit les données de la configuration du service sous la forme d'une liste de clé-valeur. Cependant, il reste certains paramètres à injecter, par exemple : l'url, le nom du service, etc... c'est le rôle des admissions-controller.\\
+
+Les admissions-controller parcourent l'ensemble de l'objet configuration, et y ajoute la clé et la valeur du paramètre qu'ils auront générés. Ainsi, dans le cas Universe et Helm, on ne possède pas les mêmes admissions-controller : \\
+\begin{itemize}
+    \item Pour Universe, on a un admission-controller qui va gérer le nom du service. En effet, Marathon ne possède pas la notion de namespace, mais plutôt de dossier \footnote{L'innovation a fait le choix que les services demandés par une personne se situent dans l'arborescence suivante users/idep/.} et ce dossier est déterminé en fonction de l'id du service. On doit donc injecter User-idep- dans le nom du service. Par ailleurs, un dossier ne peut pas contenir deux noms de service identiques, il faut donc randomiser le nom du service, l'admission controller ajoute un nombre aléatoire à la suite du nom du service (pour vs-code on aurait par exemple users/idep/vscode-1234).\\
+    
+    \item Universe utilise également un admission-controller qui va ajouter des labels (étiquettes) au service afin de le "marquer" comme un service déployé par Onyxia. \\
+    
+    \item Pour Universe et Helm, un autre admission-controller genère l'URL d'accès au service en fonction de l'idep du nom de service, du domaine sur lequel Onyxia est configuré pour déployer.\footnote{Pour éviter les doublons, ce générateur d'URLs ajoute un nombre aléatoire à l'URL.}. Cet admission-controller n'ajoute pas la même clé dans l'objet de configuration si il s'agit d'un service Universe ou Helm.\\
+\end{itemize}
+\vspace{-1cm}
 \begin{interrupt}
 \paragraph{Remarques:}
- Dans le cas de Helm, nous n'avons pas d'admission-controller qui injecte un id de service et/ou l'idep de la personne dans les values, car ces derniers s'injectent au moment de l'exécution de la commande Helm par le biais des options ("-n" pour le namespace et "--generate-name" pour l'id). \\
+ Dans le cas de Helm, nous n'avons pas d'admission-controller qui injecte un id de service et/ou l'idep de la personne dans le nom du service, car ces derniers s'injectent au moment de l'exécution de la commande Helm par le biais des options. Helm permet l'injection du namespace (option -n) et la génération d'un identifiant randommisé (option --generate-name). \\
  
  Toujours dans le cas de Helm, la détermination du namespace de l'utilisateur entraîne sa création par Onyxia si ce dernier n'existe pas.
 \end{interrupt}
-Ensuite, dans le cas de Universe, le template du service est rempli (mustaché) à l'aide de l'objet contenant la configuration. Une fois cette opération réalisée, on a un fichier marathon.json classique rempli à l'aide des valeurs précédentes. Si il s'agissait d'un lancement de type simulation, alors on renvoie à l'utilisateur ce fichier, sinon on envoie ce fichier directement à Marathon par l'intermédiaire d'une requête POST.\\
+Ensuite, dans le cas de Universe, le template du service est rempli (fichier mustache) à l'aide de l'objet contenant la configuration. Une fois cette opération réalisée, on a un fichier marathon.json classique rempli à l'aide des valeurs précédentes. Si il s'agissait d'un lancement de type simulation, alors on renvoie à l'utilisateur ce fichier, sinon on envoie ce fichier directement à Marathon par l'intermédiaire d'une requête POST.\\
 
 Pour Helm, on traduit l'objet contenant la configuration en un fichier de type values.yaml et on exécute la ligne de commande \texttt{Helm apply my-app -f my-values -n namespace} avec ou sans l'option \texttt{--dry-run} en fonction de la demande de l'utilisateur (simulation ou non). C'est donc Helm qui se charge de la récupération du template, de l'injection des valeurs ainsi que de la communication à Kubernetes du déploiement.
 
 \subsubsection{Difficultés rencontrées}
 Durant cette partie, les difficultés sont venues de la partie Helm. En effet, DC/OS propose un client Marathon (pour dialoguer directement avec Marathon), et il existe une dépendance maven facilitant le remplissage des templates \footnote{Lien vers le projet: \url{https://github.com/spullara/mustache.java}}.\newline
 
-Pour pouvoir installer une application en utilisant Helm, il fallait d'abord que l'utilisateur possède un namespace dans Kubernetes. Pour cela, nous avons dû autoriser Onyxia à créer des namespaces et faire en sorte qu'Onyxia puisse dialoguer avec Kubernetes. Nous avons donc utilisé la dépendance maven fabric8.kubernetes-client, qui fournit une bibliothèque complète permettant de dialoguer avec Kubernetes depuis java. Cette bibliothèque communique avec l'API de Kubernetes (et non avec kubectl). \newline
+Pour pouvoir installer une application en utilisant Helm, il fallait d'abord que l'utilisateur possède un namespace dans Kubernetes. Pour cela, nous avons dû autoriser Onyxia à créer des namespaces et faire en sorte qu'Onyxia puisse dialoguer avec Kubernetes. Il existe deux bibliothèques pour communiquer avec Kubernetes depuis Java, l'officielle (\url{https://github.com/kubernetes-client/java}) et celle proposé par fabri8 (\url{https://github.com/fabric8io/kubernetes-client}. Ces deux bibliothèques communiquent avec l'API de Kubernetes (et non avec kubectl). Nous avons choisi la deuxième car elle est plus complète et plus simple d'utilisation. \newline
 
-Enfin, afin qu'Onyxia puisse créer des namespaces, il fallait lui donner des droits dans le cluster Kubernetes. Initialement, nous voulions lui donner les droits cluster-admin\footnote{L'application a le droit de créer toute sorte de ressources dans le cluster.} uniquement sur l'ensemble des namespaces commençant par "user-..." (c'est-à-dire les namespaces qu'Onyxia devait gérer). Mais cela n'est pas possible actuellement\footnote{issue disponible ici : \url{https://github.com/kubernetes/kubernetes/issues/56582} fermée mais non résolue}, nous lui avons donc donné le rôle cluster-admin (ce n'est pas idéal puisque Onyxia pourrait donc interférer sur des namespaces qui ne lui sont pas dédiés).
+Afin qu'Onyxia puisse créer des namespaces, il fallait lui donner des droits dans le cluster Kubernetes. Initialement, nous voulions lui donner les droits cluster-admin\footnote{L'application a le droit de créer toute sorte de ressources dans le cluster.} uniquement sur l'ensemble des namespaces commençant par "user-..." (c'est-à-dire les namespaces qu'Onyxia devait gérer et servant à déployer les services des utilisateurs). Mais cela n'est pas possible actuellement\footnote{issue disponible ici : \url{https://github.com/kubernetes/kubernetes/issues/56582} fermée mais non résolue}, nous lui avons donc donné le rôle cluster-admin (ce n'est pas idéal puisque Onyxia pourrait donc interférer sur des namespaces qui ne lui sont pas dédiés).
 
 \subsection{Phase 3: Récupérer des services, leurs configurations et les arrêter}
-La partie consistant à récupérer les services, leurs configurations et à pouvoir les stopper a sûrement été la plus facile dans la mise en place. Des différences subsistent néanmoins dans le comportement des 2 orchestrateurs. La principale différence réside dans le fait que pour les paquets Universes, l'ensemble des actions se fait par l'intermédiaire du client Marathon  et les résultats sont lu à l'aide des classes fournies par DC/OS. Alors que dans le cas des paquets Helm, l'ensemble des actions se fait depuis Helm ce dernier et encore une fois aucune librairie facilitant la lecture des résultats n'existe.\\
+La partie consistant à récupérer les services, leurs configurations et à pouvoir les stopper a sûrement été la plus facile dans la mise en place. Des différences subsistent néanmoins dans le comportement des 2 orchestrateurs. \\
+
+La principale différence réside dans le fait que pour les paquets Universes, l'ensemble des actions se fait par l'intermédiaire du client Marathon  et les résultats sont lu à l'aide des classes fournies par DC/OS. Alors que dans le cas des paquets Helm, l'ensemble des actions se fait depuis Helm ce dernier et encore une fois aucune librairie facilitant la lecture des résultats n'existe.\\
 
 \begin{table}[H]
 \hspace{-1.5cm}
@@ -673,10 +683,11 @@ Arrêter un service                                                             
 \begin{tabular}[c]{@{}l@{}}Lister mes services + \\ Détail d'un service\end{tabular} & requête sur endpoint & \begin{tabular}[c]{@{}l@{}}Helm ls -n namespace + \\ Helm get manifest nomRelease -n namespace pour chaque release\end{tabular} \\ \bottomrule
 \end{tabular}
 \end{table}
+Pour Marathon, lister les services d'un utilisateur nécéssite de réaliser une requête à l'orchestrateur en précisant le dossier de l'utilisateur. L'utilisateur pouvant déployer des services dans ce dossier par d'autre moyen qu'Onyxia, nous rajoutons un filtre sur les labels : seul les déploiement ayant un label Onyxia doivent-être renvoyé.\\
 
-Pour Helm, chaque requête sur Onyxia-api pour lister mes services résulte en fait en n+1 requêtes. En effet, coté API on doit d'abord exécuter une première ligne de commande pour lister le nom des services qui s'exécutent dans le namespace de l'utilisateur. Ensuite, il faut faire une requête par service pour récupérer les détails le concernant. Ce qui conduit au final à n+1 requêtes (en comparaison, il suffit d'une seule requête pour les paquets Universes). \\
+Pour Helm, chaque requête sur Onyxia-API pour lister mes services résulte en fait en n+1 requêtes. En effet, coté API on doit d'abord exécuter une première ligne de commande pour lister le nom des services qui s'exécutent dans le namespace de l'utilisateur (et ou uniquement Onyxia à le droit de déployer). Ensuite, il faut faire une requête par service pour récupérer les détails le concernant. Ce qui conduit au final à n+1 requêtes (en comparaison, il suffit d'une seule requête pour les paquets Universes). \\
 
-Par ailleurs, le comportement de Helm n'est pas le même que Marathon lorsqu'on stoppe un service. En effet, Marathon distingue un service arrêté d'un service supprimé, ce n'est pas le cas de Helm. Un service Helm que l'on arrêtera sera perdu (il faudra repasser par l'étape de création pour en avoir un nouveau) alors qu'un service Universe déployé dans Marathon pourra être redémarré.
+Par ailleurs, le comportement de Kubernetes n'est pas le même que Marathon lorsqu'on stoppe un service. En effet, Marathon distingue un service arrêté d'un service supprimé, ce n'est pas le cas de Kubernetes. Un service Helm que l'on arrêtera sera perdu (il faudra repasser par l'étape de création pour en avoir un nouveau) alors qu'un service Universe déployé dans Marathon pourra être redémarré.
 
 \section{Quels besoins de sécurité ?}
 Dans le cadre d'une architecture conteneurisée il faut également mettre en place des mécanismes de sécurité. Dans le cadre de la plateforme innovation, deux critères sont importants à vérifier : la disponibilité et le traçage. La confidentialité et l'intégrité n'est pour le moment pas du tout garantie. En effet cette plateforme reste tout de même une plateforme de "tests".\\
@@ -711,7 +722,7 @@ De nombreuses solutions existent sur le marché, mais 2 auront retenue notre att
 
 Ce stage a été l'occasion de comparer leur architecture et de s'approprier leur fonctionnement. Kubernetes semble s'imposer comme la solution à retenir pour la mise en place d'une potentielle future architecture conteneurisée en production.\newline
 
-Ce stage a également mis en avant, pour les développeurs, l'importance  de savoir créer et utiliser des images Docker, puisqu'ils sont la base d'une architecture conteneurisée.\\
+Ce stage a également mis en avant, pour les développeurs, l'importance  de savoir créer et utiliser des images Docker, puisqu'ils sont à la base d'une architecture conteneurisée.\\
 
 Enfin, mes recherches dans le cadre de l'intégration continue, m'ont conduit a découvrir des outils (Argo), encore jamais utilisé à l'Insee, et qui facilite l'exploitation des conteneurs. Ces recherches ont sensibilisé, je pense, le public sur l'importance des travaux qu'il reste encore à réalisé à l'Insee afin d'améliorer les processus d'intégration continue.\\
 
@@ -1085,7 +1096,7 @@ Le but originel de ce projet était de pouvoir convertir un contrat Marathon en 
 \chapter{Compléments sur les Universes}
 \label{Universe}
 \vspace{-2cm}
-DC/OS a introduit la notion de Universe pour son gestionnaire de paquets. Universe n'est pas directement un gestionnaire de paquets, mais plutôt une syntaxe de templates \footnote{Un template est un modèle générique dans lequel on va pouvoir insérer des modifications.} utilisé par DC/OS pour son gestionnaire de paquets. \newline
+DC/OS a introduit la notion de Universe pour son gestionnaire de paquets. Universe n'est pas directement un gestionnaire de paquets, mais plutôt une syntaxe de templates \footnote{Un template est un modèle générique dans lequel on va pouvoir insérer des modifications.} utilisé par DC/OS pour son gestionnaire de paquets. Une entreprise ne bénéficiant que d'un cluster Mesos avec Marathon sans la surcouche apportées par l'offre DC/OS ne peut donc pas utiliser pleinement les Universes. \newline
 
 Un Universe est un ensemble de paquets (on parle de packages) qui peuvent être installés au sein du cluster Mesos par le biais de l'interface UI (admin) de DC/OS ou bien par la ligne de commande DC/OS.\newline
 
@@ -1135,14 +1146,6 @@ Helm s'accompagne de 3 concepts : les Charts, la config et la release. Nous allo
 \subsubsection{Charts}
 Les paquets Helm sont appelés des Charts et sont composés de plusieurs fichiers de configurations yaml (qui sont principalement des templates) et qui seront convertis en fichiers yaml compréhensible par Kubernetes grâce à la librairie Helm. La structure d'un Chart est la suivante :
 
-\begin{figure}[H]\centering
-\renewcommand{\figurename}{Capture d'écran}
-\includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/helmChart.png}
-\captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Aperçu de l'ensemble des fichiers composant un Chart\newline
-Remarque : Ici on a que les fichiers par défaut, dans la réalité il peut y en avoir beaucoup plus. \newline}
-\end{figure}
-
 \begin{itemize}
         \item charts/ : Les dépendances gérées manuellement peuvent être placées dans ce répertoire, bien qu'il soit généralement préférable d'utiliser dependencies dans Chart.yaml pour lier dynamiquement les dépendances.
         \item templates/ : Ce répertoire contient des fichiers templates qui vont être combinés avec des valeurs de configuration (provenant de values.yaml et de la ligne de commande) et rendus dans des manifestes Kubernetes. Ils contiennent en général au moins l'équivalent des trois fichiers basiques de Kubernetes : ingress, service et deployment. Les modèles utilisent le format de template du langage de programmation Go.
@@ -1151,6 +1154,16 @@ Remarque : Ici on a que les fichiers par défaut, dans la réalité il peut y en
      \item README.md : Un fichier readme avec des informations pour les utilisateurs du Chart.
       \item values.yaml : Un fichier YAML contenant les valeurs de configuration par défaut du Chart.\newline
 \end{itemize} 
+
+\begin{figure}[H]\centering
+\renewcommand{\figurename}{Capture d'écran}
+\includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/helmChart.png}
+\captionsetup{margin=1.5cm,format=hang,justification=justified}
+\caption[]{Aperçu de l'ensemble des fichiers composant un Chart\newline
+Remarque : Ici on a que les fichiers par défaut, dans la réalité il peut y en avoir beaucoup plus. \newline}
+\end{figure}
+
+
 
 L'ensemble des Charts est ensuite placé dans un Helm repository. Un Helm repository est un site HTTP qui délivre un fichier index.yaml et des Charts packagées. Ces fichiers peuvent être servis par n'importe quel serveur web, service de stockage d'objets ou un hôte de site statique tel que les pages GitHub(par exemple \url{https://inseefrlab.github.io/helm-charts-datascience/index.yaml}.
 
@@ -1200,7 +1213,7 @@ Grâce à Terraform nous avons pu écrire des scripts qui permettent de se crée
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Schéma}
-\includegraphics[angle=-90, scale=0.35]{Pictures/annexe/terraform-cloud.png}
+\includegraphics[angle=90, scale=0.35]{Pictures/annexe/terraform-cloud.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Schéma récapitulatif du fonctionnement de Terraform \newline}
 \end{figure}
@@ -1212,7 +1225,7 @@ Grâce à Terraform nous avons pu écrire des scripts qui permettent de se crée
 \chapter{Kubeapps une alternative à Onyxia ?}
 \label{kubeapps}
 \vspace{-2cm}
-Dans le monde de Kubernetes, il existe des applications permettant de simplifier le déploiement de Charts Helm. On citera notamment Kubeapps ou encore Rancher. Kubeapps est un Chart Helm qui permet de déployer une interface web permettant à son tour de déployer et de gérer des applications dans Kubernetes. Il permet d'ajouter des répertoires de Chart Helm (aussi bien public que privé) et de les déployer dans le cluster. Kubeapps permet également de gèrer, monter les versions, et supprimer les applications actuellement déployées dans le cluster. Cette application supporte également l'authentification OIDC ce qui nous permet d'utiliser Keycloak comme provider d'authentification.
+Dans le monde de Kubernetes, il existe des applications permettant de simplifier le déploiement de Charts Helm. On citera notamment Kubeapps ou encore Rancher. Kubeapps est une application déployable depuis Chart Helm qui permet de déployer une interface web permettant à son tour de déployer et de gérer des applications dans Kubernetes. Il permet d'ajouter des répertoires de Chart Helm (aussi bien public que privé) et de les déployer dans le cluster. Kubeapps permet également de gèrer, monter les versions, et supprimer les applications actuellement déployées dans le cluster. Cette application supporte également l'authentification OIDC ce qui nous permet d'utiliser Keycloak comme fournisseur d'identité.
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Capture d'écran}
@@ -1225,19 +1238,20 @@ Dans le monde de Kubernetes, il existe des applications permettant de simplifier
 \paragraph{Architecture}
 Kubeapps est une application respectant l'architecture microservice. Elle est composée d'une ihm écrite en react/javascript (Kubeapps dashboard). Mais également d'une API écrite en Go (Kubeops), elle est en charge de la communication avec Helm 3 ou encore avec les différentes ressources Kubernetes (comme les AppRepositories ou les secrets).\\
 
-\paragraph{Verdict}
-Kubeapps permet donc de faire une grosse partie de ce que onyxia fait déja : lister des services et les installer dans le cluster, consulter leur configuration et y accéder. Cependant ce dernier ne permet pas de forcer certaines valeurs à la place de l'utilisateur (par exemple l'url du service),  de plus Kubeapps ne configure pas les services tout seul, c'est à l'utilisateur de saisir la configuration (pour un postgres il faudrait notamment que l'utilisateur choisissent son mdp, son url, la taille de la bdd associées etc...). Utiliser Kubeapps comme une alternative à Onyxia n'est donc pas possible sans modifier son code source. Cela impliquerait de modifier le code de kubeops (l'API) écrit en Go, mais le rapport coût d'entrée et développement est relativement élevé, d'autant plus que le Go n'est pas courant à l'Insee (ce serait pour l'Insee une application difficilement maintenable).\newline
+\paragraph{Kubeapps un complément à Onyxia ?}
+Kubeapps regroupe plusieurs fonctionnalité d'Onyxia : lister des services et les installer dans le cluster, consulter leur configuration et y accéder. Cependant ce dernier ne permet ni l'autoconfiguration ni de forcer certaines valeurs à la place de l'utilisateur (par exemple l'url du service). En effet, c'est à l'utilisateur de saisir la configuration (pour un postgres il faudrait notamment que l'utilisateur choisissent son mdp, son url, la taille de la bdd associées etc...). Utiliser Kubeapps comme une alternative à Onyxia n'est donc pas possible sans modifier son code source. Cela impliquerait de modifier le code de kubeops (l'API) écrit en Go, mais le rapport coût d'entrée et développement est relativement élevé, d'autant plus que le Go n'est pas courant à l'Insee (ce serait pour l'Insee une application difficilement maintenable).\newline
 
-Une deuxième solution évoquée a été de faire interagir Onyxia directement avec l'API de Kubeapps. En effet on pourrait déployer Kubeapps dans le cluster et faire dialoguer Onyxia avec Kubeapps. Cela permettrait, d'une part au développeur de se connecter à Kubeapps à l'aide d'un token Kubernetes et de pouvoir configurer son application tel qu'il le souhaite, d'autre part au statisticien d'utiliser Onyxia pour déployer des services configuré rapidement. Onyxia devra néanmoins être capable de forcer les values pour chaque déploiement. L'API de Kubeapps nous servirait donc a installer le Chart, à lister ceux déja déployer, et à les supprimer. 
-\begin{figure}[H]
+Une deuxième solution évoquée a été de faire interagir Onyxia directement avec l'API de Kubeapps. En effet on pourrait déployer Kubeapps dans le cluster et faire dialoguer Onyxia avec Kubeapps. Cela permettrait, d'une part au développeur de se connecter à Kubeapps à l'aide d'un token Kubernetes et de pouvoir configurer son application tel qu'il le souhaite, d'autre part au statisticien d'utiliser Onyxia pour déployer des services configurés rapidement. Onyxia devra néanmoins être capable de forcer certains paramètre pour chaque déploiement. L'API de Kubeapps nous servirait donc a installer le Chart, à lister ceux déja déployer, et à les supprimer. \\
+
+Cette solution n'a finalement pas été retenue, en effet faire reposer Onyxia sur Kubeapps n'est pas forcement quelque chose de souhaitable puisque les différents endpoints de Kubeapps peuvent être amenés à évoluer. Kubeapps devenant juste un intermédiaire entre Helm et Onyxia, le coût pour qu'Onyxia  puisse dialoguer directement avec Helm ne nous paraissait pas important au point de retenir cette solution.\newpage
+
+\begin{figure}[H]\centering
 \renewcommand{\figurename}{Schéma}
-\hspace{-3cm}
-\includegraphics[scale=0.8]{Pictures/onyxia/Kubeapps.png}
+\includegraphics[angle=90, scale=1]{Pictures/onyxia/Kubeapps.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Architecture onyxia + Kubeapps \newline}
+\caption[]{Projet d'interfacage entre Onyxia et Kubeapps \newline}
 \end{figure}
 
-Cette solution n'a finalement pas été retenue, en effet faire reposer Onyxia sur Kubeapps n'est pas forcement quelque chose de souhaitable puisque les différents endpoints de Kubeapps peuvent être amenés à évoluer. Kubeapps devenant juste un intermédiaire entre Helm et Onyxia, le coût pour qu'Onyxia  puisse dialoguer directement avec Helm ne nous paraissait pas important au point de retenir cette solution.
 
 
 
@@ -1362,14 +1376,14 @@ Avant de parler de comment déployer notre orchestrateur dans le cloud, revenons
 
 Dans le cas du développeur qui veut pouvoir déployer rapidement ces applications, il est intéressant d'avoir accès à une offre Paas.
 \newpage
-
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Schéma}
-\includegraphics[scale=0.6]{Pictures/Comparaison/cloud/difference-cloud.png}
+\includegraphics[clip,trim={0cm, 0cm, 0cm, 1cm}, scale=0.6]{Pictures/Comparaison/cloud/difference-cloud.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Différence entre offre Cloud Iaas, Saas et Paas \newline}
 \end{figure}
 
+\vspace{-1cm}
 \subsection*{Offre Cloud Marathon et Kubernetes}
 De part son succès, de nombreux provider cloud proposent une offre Kubernetes, parmi eux on peut citer : Microsoft Azure, Amazon EKS (Amazon Elastic Kubernetes Service), GKE (Google Kubernetes Engine), etc. Ces offres proposent de créer des clusters Kubernetes en quelques minutes seulement. Par exemple, il suffit de quelque clics (choix du nombre et du type des workers nodes, localisation du cluster et la version de Kubernetes) pour lancer un cluster Kubernetes dans GKE. Ici, on parle d'offre Paas (ou clés en main). En effet, une fois le cluster créé, le développeur peut directement y déployer ses applications.\\
 
