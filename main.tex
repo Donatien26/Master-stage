@@ -99,14 +99,12 @@ L’Institut national de la statistique et des études économiques (Insee) est 
 \section{Organisation de l'informatique à l'Insee}
 La DSI (Direction du Système d'Information) de l’Insee est divisée en deux principaux groupes :  d'un coté les développeurs (les "devs") et de l'autre la production (les "ops"), chacun s'occupant de tâches qui lui sont propres.\\
 
-Les développeurs s'occupent de la conception, de l'implémentation et de la maintenance des applications, des logiciels et du site web de l'Insee (\url{www.insee.fr}). Chaque équipe de développement travaille avec sa maîtrise d'ouvrage (MOA) qui lui spécifie ses besoins. Les développeurs de l’Insee sont rattachés au Département développement du système d’information (DDSI). Les équipes sont réparties au sein de plusieurs services de développement situés à Lille, Nantes,  Orléans, et Paris. Un pôle de compétence sur la gestion de progiciels(gestion de contenu et outils collaboratifs (Wordpress par exemple) est situé à Aix-en-Provence.\\
+Les développeurs s'occupent de la conception, de l'implémentation et de la maintenance des applications, des logiciels et du site web de l'Insee (\url{www.insee.fr}). Chaque équipe de développement travaille avec sa maîtrise d'ouvrage (MOA) qui lui spécifie ses besoins. Les développeurs de l’Insee sont rattachés au Département développement du système d’information (DDSI). Les équipes sont réparties au sein de plusieurs services de développement situés à Lille, Nantes,  Orléans, et Paris. Un pôle de compétence sur la gestion de progiciels(gestion de contenu et outils collaboratifs Wordpress par exemple) est situé à Aix-en-Provence.\\
 
 La production, quant à elle, gère la mise à disposition et le maintien des divers outils informatiques. Les travaux de production comprennent : la conception et maintenance du réseau interne, la gestion du parc bureautique, la conception et le maintien des infrastructures de production et déploiement, ainsi que la supervision des applications développées par le DDSI. Au sein de la DSI, ces travaux sont confiés au Département production et infrastructure informatiques (DPII). Le DPII (situé à Paris) pilote la production et prend les décisions concernant le système d’information de l’Insee. Ce sont les divisions du pilotage qui sont maîtrises d’ouvrage des applications transverses à l’informatique (mail, annuaire...). Deux services sont fonctionnellement rattachés au DPII :
 \begin{itemize}
     \item Les équipes du Support National du Système d’Information (SNSI), basé à Nantes, désignent les solutions techniques à mettre en œuvre et offrent le support aux différentes technologies du système d’information actuel ;
-    \item Les équipes du CEI (Centre d’Exploitation Informatique), dont les agents sont en charge d’appliquer
-en production les gestes techniques validés par les équipes nantaises. Ils assurent également la supervision de la production et l’intégration des applications. Les agents du centre
-d’exploitation sont les exploitants.\\
+    \item Les équipes du CEI (Centre d’Exploitation Informatique), dont les agents sont en charge d’appliquer en production les gestes techniques validés par les équipes nantaises. Ils assurent également la supervision de la production et l’intégration des applications. Les agents du centre d’exploitation sont les exploitants.\\
 \end{itemize}
 
 Depuis septembre 2018, une nouvelle unité (UNISSI) a également vu le jour. Cette unité, qui se veut être entre les "devs" et les "ops" est composée de 3 équipes: 
@@ -116,22 +114,28 @@ Depuis septembre 2018, une nouvelle unité (UNISSI) a également vu le jour. Cet
     \item La Division innovation et instruction technique (Diit) accompagne les démarches d’innovation au sein de l’Insee. Elle est également propriétaire et administratrice de la plateforme innovation, une infrastructure de type Cloud privé dédiée à la pratique d’activités innovantes à la fois informatiques, organisationnelles et statistiques.\\
 \end{itemize}
 
-La coopération entre les équipes de production et de développement est essentielle. En effet, chaque application, à un moment donné dans son cycle de vie, est déployée en production. Il faut alors que les développeurs et les différentes équipes de la production soit en perpétuelle communication pour s'assurer que les besoins des uns et des autres soient bien pris en compte. Cette étape charnière est facilitée par les Responsables de l’intégration des applications en production (RIAP). La tendance actuelle, basée sur les méthodes agiles et sur des rythmes de mise en production plus soutenus,  soulève la question de la charge de travail de ces personnes. De nouvelles pratiques d'intégration continue voient progressivement le jour au sein des développeurs.\newline
+ La coopération entre les équipes de production et de développement est essentielle. En effet, chaque application, à un moment donné dans son cycle de vie, est déployée en production. Il faut alors que les développeurs et les différentes équipes de la production soit en perpétuelle communication pour s'assurer que les besoins des uns et des autres soient bien pris en compte. Cette étape charnière est facilitée par les Responsables de l’intégration des applications en production (RIAP). La tendance actuelle, basée sur les méthodes agiles et sur des rythmes de mise en production plus soutenus,  soulève la question de la charge de travail de ces personnes. De nouvelles pratiques d'intégration continue voient progressivement le jour au sein des développeurs.\newline
+\vspace{-0.5cm}
+\section{Une forge logicielle}
+Le développement de pratiques d'intégration continue a été favorisé par l'instauration d'une forge logicielle. Une forge logicielle est une plateforme collaborative accessible par le Web permettant de travailler conjointement sur un même projet. Suite à une expérimentation par la division innovation,  l'Insee a choisi d'adopter Gitlab comme forge logicielle. Gitlab permet, au-delà d'héberger du code, de déclarer des problèmes, mais aussi de réaliser des opérations d'intégration continue. En effet, Gitlab propose la mise en place de pipelines (un ensemble de tâches s'exécutant les unes à la suite des autres) permettant de construire une application, de la déployer, etc...\\
+
+Ce Gitlab s'interface avec l'infrastructure conteneurisée de l'innovation afin de générer des environnements de tests pour les applications dans des conteneurs. En effet, sans cette possibilité, un développeur ne peut tester toute ces modifications sur un autre environnement que son poste, qu'en déployant une nouvelle version de l'application sur les environnements de développement (dv) ou de qualification (qf). Ces plateformes sont situées au CEI et sont des environnements de type VMs.\\
+
+La mise en place de Gitlab constitue, à l'insee, la première offre\footnote{Des essais reposant sur les pipelines jenkins avait déjà été fait} grand public permettant aux développeurs d'expérimenter la notion d'intégration continue, de conteneurisation et de pipeline as code.\newline
+% ya eu jenkins avec les pipeline géré par administrateur avant, eventuellement dire que gitlab est la premiere offre "grand public dev" qui propose du pipeline as code
 
 \section{Onyxia: Une plateforme pour les rassembler tous}
-Le développement de pratiques d'intégration continue a été favorisé par l'instauration d'une forge logicielle. Une forge logicielle est une plateforme collaborative accessible par le Web permettant de travailler conjointement sur un même projet. L'Insee a choisi d'adopter Gitlab comme forge logicielle. Gitlab permet, au-delà d'héberger du code, de déclarer des problèmes, mais aussi de réaliser des opérations d'intégration continue. En effet, Gitlab propose la mise en place de pipelines (un ensemble de tâches s'exécutant les unes à la suite des autres) permettant de construire une application, de la déployer, etc... Grâce à la mise en place de Gitlab, les développeurs ont donc pu avoir un premier aperçu de la notion d'intégration continue et de conteneurisation.\newline
-
 Gitlab est une des briques utilisée par la division innovation, pour la mise en place d'une plateforme de type datalab. Un datalab est un espace exclusivement dédié à l’expérimentation et à la qualification « fonctionnelle » des différentes données de l’entreprise. En effet, il permet d’explorer des jeux de données, de les traiter, mais aussi de mettre à l’épreuve des algorithmes de Machine Learning.\\
 
 
 Par ailleurs, la Diit a également développé une application appelée Onyxia. Cette application est un élément central du datalab et se veut comme un portail vers plusieurs applications : minIo (stockage), Vault (gestion des secrets), Keycloak (pour de la sécurité), Marathon (pour le déploiement de services). Elle permet également de déployer des applications déjà configurées à la demande. La plateforme repose sur une infrastructure conteneurisée à l'aide de l'orchestrateur de conteneurs Marathon. Ces deux notions seront présentées dans la suite du rapport. 
 
-\begin{figure}[H]\centering
-\renewcommand{\figurename}{Schéma}
-\includegraphics[scale=0.2,clip,trim={18cm, 0cm, 0cm, 11.6cm}]{Pictures/onyxia/Onyxia archi.jpg}
-\captionsetup{margin=1.5cm,format=hang,justification=justified}
-\caption[]{Aperçu simplifié de l'architecture de l'écosystème Onyxia \newline}
-\end{figure}
+% \begin{figure}[H]\centering
+% \renewcommand{\figurename}{Schéma}
+% \includegraphics[scale=0.2,clip,trim={18cm, 0cm, 0cm, 11.6cm}]{Pictures/onyxia/Onyxia archi.jpg}
+% \captionsetup{margin=1.5cm,format=hang,justification=justified}
+% \caption[]{Aperçu simplifié de l'architecture de l'écosystème Onyxia \newline}
+% \end{figure}
 
 
 \section{Objectif et problématique du stage}
@@ -148,7 +152,10 @@ Dans cette partie nous allons expliquer pourquoi les conteneurs ont été choisi
 
 \section{Du serveur physique au conteneur, évolution}
 \subsection{Serveur physique}
-Initialement (avant les années 1970 et jusqu'au début des années 2000 à l'Insee), une application était installée sur un un serveur physique. On créait alors les environnements avec des batchs\footnote{Un batch désigne l'automatisation d'une suite de commandes exécutées en série sur un ordinateur, sans qu'il soit nécessaire qu'un opérateur intervienne pour réaliser cette opération.}, que l'on lançait manuellement. Les applications étaient déployées sur le même OS (Operating System ou système d'exploitation comme Windows par exemple) sur une seule machine physique. On n'avait donc aucun moyen de limiter les ressources utilisées par une application. Par exemple, si sur une machine nous avions deux applications A et B, si A utilisait trop de ressources alors B avait des performances médiocres. La solution aurait été de n'installer qu'une application par serveur, mais cela aurait conduit à des ressources non utilisées et un coût élevé pour les entreprises. \newline
+Initialement (avant les années 1970 et jusqu'au début des années 2000 à l'Insee), une application était installée sur un un serveur physique. On créait alors les environnements avec des batchs\footnote{Un batch désigne l'automatisation d'une suite de commandes exécutées en série sur un ordinateur, sans qu'il soit nécessaire qu'un opérateur intervienne pour réaliser cette opération.}, que l'on lançait manuellement. Plusieurs applications étaient déployées sur le même OS (Operating System ou système d'exploitation comme Windows par exemple) sur une seule machine physique. On n'avait donc aucun moyen de limiter les ressources utilisées par une application. Par exemple, si sur une machine nous avions deux applications A et B, si A utilisait trop de ressources alors B avait des performances médiocres. La solution aurait été de n'installer qu'une application par serveur, mais cela aurait conduit à des ressources non utilisées et un coût élevé pour les entreprises. \newline
+
+
+\newline
 
 \subsection{Virtualisation}
 Dans un système d'information, plusieurs applications cohabitent et il est nécessaire que les applications soient indépendantes les unes des autres. Les solutions dites de virtualisation permettent de transformer une ressource physique en un ensemble de ressources logiques isolées. Il est donc possible de virtualiser, entre autres, un réseau ou une machine physique. On fait ainsi fonctionner plusieurs “machines” logiques sur une même machine physique appelée hôte. La virtualisation permet de rendre indépendantes les couches basses (matériel) d’une ressource et les couches hautes (applications, traitements). Les couches hautes peuvent ainsi être aisément déplacées sur une autre infrastructure (en cas de panne ou si les ressources deviennent insuffisantes par exemple).
@@ -179,20 +186,24 @@ Les machines virtuelles comme les conteneurs proposent chacun une solution pour 
 Dans le cadre des VMs, l'administrateur a le choix du système d'exploitation utilisé par chacune des VMs. En effet, chaque VM possède son propre système d'exploitation, il est indépendant des autres OS des VMs installées sur la même machine, et il est même indépendant de l'OS du système hôte. De son coté, le conteneur utilise le système d'exploitation du système sur lequel il est déployé et cet OS est partagé avec l'ensemble des conteneurs qui s'exécutent sur la machine. Les machines virtuelles sont donc plus flexibles sur ce point-ci.
 
 \paragraph{Taille d'une application}
-Par ailleurs, cette flexibilité des VMs s'accompagne d'un espace de stockage nécessaire bien plus important. En effet, l'ISO\footnote{Les fichiers ISO (International Standard File) sont des fichiers images, contenant des données, qui peuvent être gravés sur un CD/DVD ou mis sur une clé USB, ils servent notamment à l'installation des VMs.} d'une VM a une taille plus importante que l'image d'un conteneur\footnote{L'image d'un conteneur est un fichier statique non modifiable. Il renferme un code exécutable de manière à exécuter un processus isolé dans une infrastructure informatique.}. Pour une VM, il faut packager le Système d'exploitation, les librairies et l'application. Alors que pour un conteneur, seuls sont nécessaires les librairies et l'application. Ce phénomène s'accentue d'autant plus que l'on veut un nombre de réplicas\footnote{Nombre d'instance d'une application} élevés.
+Par ailleurs, cette flexibilité des VMs s'accompagne d'un espace de stockage nécessaire bien plus important. En effet, le "modèle d'une VM" a une taille plus importante que l'image d'un conteneur\footnote{L'image d'un conteneur est un fichier statique non modifiable. Il renferme un code exécutable de manière à exécuter un processus isolé dans une infrastructure informatique.}. Pour une VM, il faut packager le Système d'exploitation, les librairies et l'application. Alors que pour un conteneur, seuls sont nécessaires les librairies et l'application. Ce phénomène s'accentue d'autant plus que l'on veut un nombre de réplicas\footnote{Nombre d'instance d'une application} élevés.
 
 \paragraph{Rapidité de démarrage}
 De même, les conteneurs démarrent bien plus rapidement qu'une machine virtuelle.
-Selon l'étude \textit{Comparative Study of Virtual Machines and Containers for DevOps Developers\footnote{\url{https://www.researchgate.net/publication/327237114_Comparative_Study_of_Virtual_Machines_and_Containers_for_DevOps_Developers}}}, une distribution Ubuntu (un système d'exploitation basé sur Linux) met 40 ms pour démarrer et 29 ms pour s'arrêter à partir d'un conteneur, contre près de 59 s pour démarrer et 30 s pour s'éteindre sur une VM.
+Selon l'étude \textit{Comparative Study of Virtual Machines and Containers for DevOps Developers\footnote{\url{https://www.researchgate.net/publication/327237114_Comparative_Study_of_Virtual_Machines_and_Containers_for_DevOps_Developers}}}, un serveur web apache (un simple serveur web) met 40 ms pour démarrer et 29 ms pour s'arrêter à partir d'un conteneur, contre près de 59 s pour démarrer et 30 s pour s'éteindre sur une VM.
 
 \paragraph{Rapidité d'écriture des données}
-Cette même étude montre également que la vitesse d'écriture et de lecture de données depuis un conteneur est plus rapide que depuis une VM. En effet, un Ubuntu dans un conteneur effectue quasiment autant d'opérations de lecture et d'écriture qu'un Ubuntu installé directement sur une machine. Les VMs ont un rendement 25\% plus faible. 
+Cette même étude montre également que la vitesse d'écriture et de lecture de données depuis un conteneur est plus rapide que depuis une VM. En effet, un serveur web apache dans un conteneur effectue quasiment autant d'opérations de lecture et d'écriture qu'un serveur web apache installé directement sur une machine. Les VMs ont un rendement 25\% plus faible. 
 
 \paragraph{Sauvegarder, restaurer, migrer}
-VirtualBox, VMware ou encore KVM proposent des solutions afin de réaliser des sauvegardes et/ou de restaurer des machines virtuelles à partir de sauvegardes. Dans le monde du conteneur, de telles solutions sont quasi inexistantes \footnote{Il existe un projet, en cours de développement appelé CRIU et qui permet de sauvegarder l'état d'un conteneur.}. En effet, une application s'exécutant dans un conteneur n'a pas vocation à vivre éternellement. (On verra plus loin que les conteneurs n'ont pas vocation à perdurer (leur durée de vie moyenne étant de 5 min.) Les orchestrateurs de conteneurs peuvent les arrêter et les redémarrer plusieurs fois par jour (et même en production) sans aucune interruption de service.
+VirtualBox, VMware ou encore KVM proposent des solutions afin de réaliser des sauvegardes et/ou de restaurer des machines virtuelles à partir de sauvegardes.\\
+
+Dans le monde du conteneur de telles solutions n'existent pas et n'ont pas lieu d'être. En effet le conteneur est une unité qui permet de répondre à un usage précis (traitement) et qui va récupérer les données dans un "volume"\footnote{Espace de stockage rattaché à un conteneur où vont être stockée les données nécessaires à son fonctionnement.}. Dans le monde du conteneur, on cherche donc plutôt à sauvegarder les données que l'état du conteneur.\\  
+
+Des solutions de sauvegarde de l'état d'un conteneur sont quasi inexistantes \footnote{Il existe un projet, en cours de développement appelé CRIU et qui permet de sauvegarder l'état d'un conteneur.}. En effet, une application s'exécutant dans un conteneur n'a pas vocation à vivre éternellement (On verra plus loin que les conteneurs n'ont pas vocation à perdurer (leur durée de vie moyenne étant de 5 min.). Les orchestrateurs de conteneurs peuvent les arrêter et les redémarrer plusieurs fois par jour (et même en production) sans aucune interruption de service.
 
 \paragraph{Sécurité}
-Cependant, les machines virtuelles offrent une plus grande sécurité. En effet, si un attaquant arrive à sortir de l'application (et à avoir accès à la couche supérieure), dans le cadre d'une VM ce dernier aura accès au BIOS, au réseau de la VM, mais il ne pourra pas accèder aux autres VMs (même celles de la même machine). Les conteneurs n'offrent pas cette isolation, un attaquant qui sortirait de l'application s'exécutant dans le conteneur pourrait alors accéder aux librairies partagées et donc accéder aux autres conteneurs. Cette faille pouvant être causée aussi bien par le développeur que par les dépendances qui auront servies à construire l'image.\footnote{\url{https://www.lemondeinformatique.fr/actualites/lire-une-faille-dans-runc-rend-vulnerable-docker-et-kubernetes-74312.html}} 
+Les machines virtuelles offrent une plus grande sécurité. En effet, si un attaquant arrive à sortir de l'application (et à avoir accès à la couche supérieure), dans le cadre d'une VM ce dernier aura accès au BIOS, au réseau de la VM, mais il ne pourra pas accèder aux autres VMs (même celles de la même machine). Les conteneurs n'offrent pas cette isolation, un attaquant qui sortirait de l'application s'exécutant dans le conteneur pourrait alors accéder aux librairies partagées et donc accéder aux autres conteneurs. Cette faille pouvant être causée aussi bien par le développeur que par les dépendances qui auront servies à construire l'image.\footnote{\url{https://www.lemondeinformatique.fr/actualites/lire-une-faille-dans-runc-rend-vulnerable-docker-et-kubernetes-74312.html}} 
 
 \begin{interrupt}
 \paragraph{Comment choisir ?}
@@ -210,12 +221,12 @@ La mission d'un orchestrateur de conteneurs est de répartir les conteneurs sur 
 \end{itemize}
  
 L'orchestrateur permet donc d'assurer un rôle de surveillant de l'état des conteneurs. En effet, à partir d'un fichier descriptif qui contient le nombre de conteneurs souhaités, l'état désiré, etc et à l'aide de healtcheck\footnote{Contrôle servant à vérifier si l'application s'exécute correctement} régulier, il est capable de détecter les conteneurs en mauvaise santé. Il pourra ainsi en démarrer de nouveaux et toujours maintenir le système dans un état de fonctionnement optimal.\\
-L'orchestrateur est aussi capable de tenir compte des contraintes dynamiques. En effet, les contraintes évoluent dans le temps. Par exemple, on peut vouloir que deux conteneurs ne soient jamais sur le même serveur pour garantir une haute disponibilité de services. Ou encore, on peut vouloir que les conteneurs soient déployés sur des serveurs éloignés afin de limiter la latence pour l'utilisateur. L'orchestrateur sait également réagir en cas de perte d'une des machines. Il permet donc de mettre en place des mécanismes de haut niveau : haute disponibilité, monitoring, Service Discovery \footnote{Service Discovery est un protocole réseau qui permet la découverte de service.}, gestion du trafic réseau,  scalabilité horizontale \footnote{La scalabilité horizontale correspond à l'ajout de nouveaux serveurs réalisant le même type de tâche.} et verticale \footnote{La scalabilité verticale correspond à l'ajout de ressources à un unique serveur (CPU, mémoire, etc).}, provisionning\footnote{En francais provisionnement, désigne l'allocation automatique de ressources.} et placement des conteneurs.\\
+L'orchestrateur est aussi capable de tenir compte des contraintes dynamiques. En effet, les contraintes évoluent dans le temps. Par exemple, on peut vouloir que deux conteneurs ne soient jamais sur le même serveur pour garantir une haute disponibilité de services. Ou encore, on peut vouloir que les conteneurs soient déployés sur des serveurs éloignés afin de limiter la latence pour l'utilisateur. L'orchestrateur sait également réagir en cas de perte d'une des machines. Il permet donc de mettre en place des mécanismes de haut niveau : haute disponibilité, monitoring, Service Discovery \footnote{La découverte de service (ou Service Discovery) est la détection automatique des appareils et services offerts par des appareils sur un réseau informatique}, gestion du trafic réseau,  scalabilité horizontale \footnote{La scalabilité horizontale correspond à l'ajout de nouveaux serveurs réalisant le même type de tâche.} et verticale \footnote{La scalabilité verticale correspond à l'ajout de ressources à un unique serveur (CPU, mémoire, etc).}, provisionning\footnote{En francais provisionnement, désigne l'allocation automatique de ressources.} et placement des conteneurs.\\
 
 
 
 \section{Les différents orchestrateurs}
-Aujourd'hui, plusieurs solutions d'orchestration existent, mais trois se démarquent : Kubernetes, DC/OS avec Mesos/Marathon et  Docker Swarm.\footnote{Il existe d'autres solutions telles que OpenShift ou encore Rancher mais elles ne sont, au final, que des customizations de Kubernetes.}
+Aujourd'hui, plusieurs solutions d'orchestration existent, mais trois se démarquent : Kubernetes, DC/OS avec Mesos/Marathon et  Docker Swarm.\footnote{Il existe d'autres solutions telles que OpenShift ou encore Rancher mais elles ne sont, au final, que Kubernetes avec un ajout de surcouches.}
 
 \subsection{Mesos/Marathon}
 Mesos est la solution la plus ancienne parmi les trois citées. Développée initialement par Mesosphère (qui est devenu DC/OS, puis récemment D2IQ), sa genèse remonte à une époque (2008) où la popularité des conteneurs était nettement moindre. Le concept de Mesos est de regrouper un ensemble de ressources (RAM, CPU) pour proposer une vue agrégée, permettant d’exécuter des programmes (conteneurisés ou pas). Mesos n’a pas vocation à être utilisé seul. Il délègue l’exécution des programmes à ses frameworks\footnote{Voir plus loin}. Parmi eux, les plus utilisés sont certainement Marathon et Aurora. Ce sont eux qui, sur la base d’un fichier de configuration, sont responsables de placer les conteneurs et de garantir leur exécution dans les conditions souhaitées.\\
@@ -223,15 +234,9 @@ Mesos est la solution la plus ancienne parmi les trois citées. Développée ini
 C'est la solution actuellement utilisée sur la plateforme de l'innovation pour manager les différentes ressources : services à la demande, Gitlab, job Gitlab\footnote{Tâche s'exécutant sur les runners. Un runner est une machine qui sera uniquement réservé pour exécuter des pipelines Gitlab.}, etc... \\ 
 
 \subsection{Kubernetes}
-Kubernetes (souvent abrégé k8s) est un produit open source développé initialement par Google, et reversé à la communauté (depuis 2014). Le géant de l’Internet, à l’origine du développement des cgroups\footnote{cgroups (control groups) est une fonctionnalité du noyau Linux pour limiter, compter et isoler l'utilisation des ressources (processeur, mémoire, utilisation disque, etc.).}, utilise les conteneurs depuis près de 15 ans. Le partage de son orchestrateur avec la communauté constitue donc un gage de qualité. C'est actuellement l'orchestrateur le plus utilisé dans le monde. De nombreuses entreprises exploitent kubernetes afin de fournir une solution d'orchestration de conteneurs. On retrouve notamment RedHat avec OpenShift ou encore Rancher ou même D2IQ (anciennement DC/OS) avec Kommander.
+Kubernetes (souvent abrégé k8s) est un produit open source développé initialement par Google, et reversé à la communauté (depuis 2014). Le géant de l’Internet, à l’origine du développement des cgroups\footnote{cgroups (control groups) est une fonctionnalité du noyau Linux pour limiter, compter et isoler l'utilisation des ressources (processeur, mémoire, utilisation disque, etc.).}, utilise les conteneurs depuis près de 15 ans. Le partage de son orchestrateur avec la communauté constitue donc un gage de qualité. \\
 
-\subsection{Swarn Docker}
-Swarm est la solution d’orchestration fournie par Docker. Il est difficile de prédire ce que sera Swarm dans un an tant son évolution a été rapide dernièrement. Au départ un composant à part, Swarm est désormais complètement intégré au service Docker. On ne parle plus de Swarm en tant que tel mais du Docker “Swarm mode”.\\
-
-\section{Les solutions retenues}
-Pour cette étude, nous nous intéresserons plus particulièrement à Mesos/Marathon (solution actuellement en place à l'Insee sur la plateforme innovation, par le biais de la licence entreprise DC/OS) et Kubernetes (par le biais de Google Cloud Provider (GCP) voir annexe \ref{Terraform} pour plus de détail concernant la mise en place de cette solution)\footnote{Nous avons utiliser GCP pour plusieurs raisons : installer Kubernetes sur ses propres machines est relativement coûteux en temps et en moyen humain (en moyenne, une telle installation nécessite près de 6 mois pour être réalisée par une équipe d'une dizaine de personne à temps plein). Utiliser GCP nous a permis d'éviter de nous concentrer sur la maintenance des machines et de nous concentrer uniquement sur ce que pouvait apporter l'orchestrateur en terme de fonctionnalités. Ce choix nous a également permis de pouvoir poursuivre les travaux malgré le confinement dû au covid-19.} , le nouveau leader mondial dans l'orchestration de conteneur.\newline
-
-Selon Sysdig \footnote{ Rapport disponible ici : \url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}, plus de 77\% des personnes qui utilisent un orchestrateur de conteneur utilisent Kubernetes. Ce taux monte à plus de 85\% si l'on ajoute les solutions OpenShift et Rancher qui sont basées sur Kubernetes. Par ailleurs, Kubernetes bien qu'étant l'orchestrateur de conteneur le plus récent, possède déjà le plus grand nombre de commits\footnote{Un commit est le fait d'enregistrer dans un outil de gestion de versions (GitLab) une nouvelle version d'un ensemble de fichiers.}, une communauté active, et un cycle de développement très court (une version majeure est déployée tous les 3 mois).
+Selon Sysdig \footnote{ Rapport disponible ici : \url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}, plus de 77\% des personnes qui utilisent un orchestrateur de conteneur utilisent Kubernetes. Ce taux monte à plus de 85\% si l'on ajoute les solutions OpenShift et Rancher qui sont basées sur Kubernetes.C'est actuellement l'orchestrateur le plus utilisé dans le monde.\\ 
 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Graphique}
@@ -240,6 +245,18 @@ Selon Sysdig \footnote{ Rapport disponible ici : \url{https://sysdig.com/blog/sy
 \caption[]{Pourcentage d'utilisation de chaque orchestrateur\newline
 Source : Sysdig, \url{https://sysdig.com/blog/sysdig-2019-container-usage-report/}}
 \end{figure}
+
+Par ailleurs, Kubernetes bien qu'étant l'orchestrateur de conteneur le plus récent, possède déjà le plus grand nombre de commits\footnote{Un commit est le fait d'enregistrer dans un outil de gestion de versions (GitLab) une nouvelle version d'un ensemble de fichiers.}, une communauté active, et un cycle de développement très court (une version majeure est déployée tous les 3 mois).
+
+
+
+\subsection{Swarn Docker}
+Swarm est la solution d’orchestration fournie par Docker. Il est difficile de prédire ce que sera Swarm dans un an tant son évolution a été rapide dernièrement. Au départ un composant à part, Swarm est désormais complètement intégré au service Docker. On ne parle plus de Swarm en tant que tel mais du Docker “Swarm mode”.\\
+
+
+\section{Les solutions retenues}
+Pour cette étude, nous nous intéresserons plus particulièrement à Mesos/Marathon (solution actuellement en place à l'Insee sur la plateforme innovation, par le biais de la licence entreprise DC/OS) et Kubernetes. Initialement il était prévu d'expérimenter Kubernetes en interne (par le biais de DC/OS) mais cette solution n'a pas été retenue en bonne partie à cause du confinement. Nous avons donc utilisé Kubernetes par le biais de Google Cloud Provider (GCP)\footnote{Nous avons utiliser GCP pour plusieurs raisons : installer Kubernetes sur ses propres machines est relativement coûteux en temps et en moyen humain (en moyenne, une telle installation nécessite près de 6 mois pour être réalisée par une équipe d'une dizaine de personne à temps plein). La version de Kubernetes proposé par DC/OS était relativement instable. Utiliser GCP nous a permis d'éviter de nous concentrer sur la maintenance des machines et de nous concentrer uniquement sur ce que pouvait apporter l'orchestrateur en terme de fonctionnalités. Ce choix nous a également permis de pouvoir poursuivre les travaux malgré le confinement dû au covid-19.}. Le détail de la mise en place de cette solution est disponible en annexe \ref{Terraform}.\newline
+
 
 
 %----------------------------------------------------------------------------------------
@@ -436,7 +453,7 @@ Argo Flux est un projet très récent, annoncé peu avant la KubeCon 2019 (Conf�
 
 \begin{interrupt}
 \paragraph{Remarque}
-Les solutions ci-dessus sont majoritairement orientées Kubernetes. En effet, il n'existe pas de solution orientée DevOps dans Marathon. C'est d'ailleurs une des raisons qui pousse les entreprises à utiliser Kubernetes comme orchestrateur de conteneurs. Marathon ayant été conçu avant que les notions de GitOps ne deviennent une généralité.
+Les solutions ci-dessus sont majoritairement orientées Kubernetes. En effet, il n'existe pas de solution orientée DevOps (ou GitOps) dans Marathon. C'est d'ailleurs une des raisons qui pousse les entreprises à utiliser Kubernetes comme orchestrateur de conteneurs. Marathon ayant été conçu avant que les notions de GitOps ne deviennent une généralité.
 \end{interrupt}
 \section{Argo: Vers une architecture conteneurisée en production}
 
@@ -456,7 +473,6 @@ L'interface graphique d'ArgoCD permet notamment d'avoir une vue explosée de nos
 \caption[]{Architecture et fonctionnement de l'environnement Argo \newline}
 \end{figure}
 
-
 \begin{figure}[H]
 \renewcommand{\figurename}{Capture d'écran}
 \hspace{-2.5cm}
@@ -474,7 +490,7 @@ Avant de se lancer dans le GitOps, il faut d'abord que notre projet réponde à 
     \item Le downtime : Si un conteneur (ou pire un worker node) contenant une application dysfonctionne pour une raison quelconque, il faut que l'orchestrateur relance cette application. Durant ce laps de temps, l'application peut être indisponible. On parle alors de downtime. Un moyen de palier à ce problème est d'avoir plusieurs répliques de notre application réparties sur plusieurs nodes, pour qu'en cas de bug d'une des répliques, les autres prennent le relais. Il est donc interdit à l'application de posséder des données en local. \\
     
     \item La surcharge : Il peut arriver que le cluster soit en surcharge suite à une trop forte demande des utilisateurs, ou encore suite la perte d'un node obligeant le déplacement des applications sur un autre node (perte de ressources entraînant une surcharge). Une surcharge peut également avoir lieu lorsque l'ensemble des  applications consomme toutes les ressources disponibles. Pour cela on a deux solutions : prévoir large (c'est-à-dire surdimensionner le cluster, mais cela entraîne une non utilisation des ressources) ou bien faire de l'autoscaling (littéralement mise à l'échelle automatique, c'est-à-dire laisser automatiquement le cluster démarrer des worker-nodes ou des conteneurs afin de répondre à la charge, le problème est que cela peut être coûteux). \footnote{C'est d'ailleurs à cause de cette raison que Amazon s'est initialement converti en fournisseur cloud : leur serveur était surchargé pendant certaines périodes de l'année (fêtes de fin d'année). Ils ont donc décidé de louer les ressources qu'ils n'utilisaient pas le reste de l'année, afin de rentabiliser leur infrastructure.} Dans tout les cas l'application se doit donc d'être scalable\footnote{(littéralement mise à l'échelle) Une application est dite scalable si elle possède la capacité à maintenir ses fonctionnalités et ses performances en cas de forte demande (montée en charge). Elle doit être scalable verticalement (augmentation des ressources allouées :  CPU, mémoire...) et scalable horizontalement (augmentation du nombre de répliques de l'application), le premier étant plus facile à garantir que le second.}.\\
-    \footnote{Désigne la capacité d'un produit à s'adapter à un changement d'ordre de grandeur de la demande (montée en charge).}
+
     \item La perte de donnée : de la même façon que précédemment, aucune donnée ne doit être attachée à un conteneur. Il faut donc, dans le cas du stockage de données (comme pour une base de données par exemple), avoir une certaine redondance des données et/ou pouvoir les externaliser. Les applications stateless\footnote{(ou sans état) Désigne une application qui ne sauvegarde pas les données de l'utilisateur générées lors d'une session pour les utiliser lors de la session suivante avec cet utilisateur} ne possèdent aucune donnée en local, tout leur état étant déporté sur une autre application.\\
 \end{itemize}
 
@@ -867,8 +883,6 @@ Il faut savoir que un déploiement dans Marathon ce fait par l'intermédiaire d'
 
   {
     "id": "/users/ystfg5/vscode-8073154573408695635",
-    "cmd": "dumb-init bash /mnt/mesos/sandbox/onyxia-init.sh fixuid 
-            -q /usr/bin/code-server --host 0.0.0.0 .",
     "instances": 1,
     "cpus": 0.1,
     "mem": 2048,
@@ -889,10 +903,7 @@ Il faut savoir que un déploiement dans Marathon ce fait par l'intermédiaire d'
       }
     },
     "env": {
-      "GIT_USER_NAME": "Donatien Eneman",
-      "GIT_USER_MAIL": "donatien.eneman@insee.fr",
-      "GIT_CREDENTIALS_CACHE_DURATION": "0",
-      "PORT": "8080"
+      "PASSWORD": "Changeme",
     },
     "labels": {
       "HAPROXY_0_VHOST": "amodifier.portail.innovation.insee.eu",
@@ -917,10 +928,9 @@ Si on découpe le contrat ci dessus on a les parties suivantes :
     \item id : l'id corresponds au dossier (virtuel) auquel va être rattaché le conteneur. Cela permet d'isoler les ressources entre utilisateur.
     \item container : Ici on déclare l'image que l'on va vouloir déployer
     \item env : Cette balise permet d'ajouter des variables d'environnement directement disponible au sein du conteneur. Ici on injecte la conf git de l'utilisateur   
-    \item labels : Dans Marathon, la configuration du reverse proxy se fait par l'intermédiaire des labels. Il a été choisit d'utiliser HA\_PROXY. Ce dernier scanne l'ensemble des déploiements dans Marathon en continue. Lorsqu'il trouve l'annotation HAPROXY\_0\_VHOST il sait qu'il va devoir exposer ce déploiement, il ajoute alors ce conteneur à sa table de déploiement ce qui lui permettra de faire le mapping entre l'url demandé et le service correspondant lorsqu'une requête demandant l'accès a ce service
-    arrivera.   
+    \item labels : Dans Marathon, la configuration du reverse proxy se fait par l'intermédiaire des labels. Il a été choisit d'utiliser HA\_PROXY comme reverse-proxy. Ce dernier scanne l'ensemble des déploiements dans Marathon en continue. Lorsqu'il trouve l'annotation HAPROXY\_0\_VHOST il sait qu'il va devoir exposer ce déploiement, il ajoute alors ce conteneur à sa table de déploiement ce qui lui permettra de faire le lien entre l'url demandé et le service correspondant lorsqu'une requête demandant l'accès a ce service arrivera.   
     \item instance: le nombre de réplique l'on veut du service.
-    \item fetch: cette partie indique a Marathon d'aller télécharger le fichier correspondant et de l'ajouter à la mesos-sandbox (un espace de stockage accessible a ce conteneur).
+    \item fetch: cette partie indique a Marathon d'aller télécharger le fichier correspondant et de l'ajouter à la mesos-sandbox (un espace de stockage accessible à ce conteneur).
 \end{itemize}
 \section*{Kubernetes : le trio ingress.yaml, service.yaml, deploiement.yaml}
 
@@ -984,7 +994,7 @@ On retrouve les informations intéressantes suivantes:
     \item le champ replicas qui corresponds au nombre de conteneurs que l'on va lancer dans le cluster. On parle alors de scalabilité horizontale. 
     \item le champ image qui corresponds à l'image docker que nous allons déployer dans Kubernetes.
     \item le champs env qui va nous permettre de passer des variables d'environnement au conteneur.
-    \item le champs volume permet de déclarer un volume et le type de ce dernier. Ce volume sera ensuite attaché aux conteneurs avec l'entrée volumemounts.
+    \item le champs volume permet de déclarer un volume et le type de ce dernier. Ce volume sera ensuite attaché au conteneur avec l'entrée volumemounts.
     \item le champs init container. Un init container est un conteneur qui s'executent avant notre déploiement afin de réaliser une certaine tache. Ici on va récuperer le fichier avec un wget et on le place dans un repertoire qui sera commun avec le conteneur que l'on veut déployer. Un init container pourrait très bien servir à requêter une API, ou à faire des tests sur l'existence d'un autre conteneur avant de démarrer.
     \item les autres champs sont essentiellement des champs qui serviront a Kubernetes comme identifiant.\\
 \end{itemize}
@@ -1003,7 +1013,7 @@ Kubectl est la ligne de commande qui nous permet de communiquer avec le cluster 
 
 Notre Pod est désormais deployé, mais il tourne dans le cluster mais impossible d'accéder à ce déploiement. 
 \subsection*{Service.yaml}
-Chaque Pod possède une adresse IP qui lui est propre, on pourrait donc imaginer donné accès a cette adresse ip aux utilisateurs. Mais lorsqu'on diffuse une application, on expose un service qui sera rendu par plusieurs Pod, donner l'ip du Pod aux utilisateurs n'est donc pas le meilleur moyen. De plus, tous les clients de l'application (en particulier les autres microservices du cluster) n'ont pas à savoir où sont les Pods précisemment. \\
+Chaque Pod possède une adresse IP qui lui est propre, on pourrait donc imaginer donné accès a cette adresse ip aux utilisateurs. Mais lorsqu'on diffuse une application, on expose un service qui sera rendu par un ou plusieurs Pod, donner l'ip du Pod aux utilisateurs n'est donc pas le meilleur moyen. De plus, tous les clients de l'application (en particulier les autres microservices du cluster) n'ont pas à savoir où sont les Pods précisemment. \\
 
 Par ailleurs, Kubernetes propose et impose un découplage fort entre le service rendu et l'application qui le rend. \\ 
 
