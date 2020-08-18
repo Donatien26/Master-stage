@@ -557,7 +557,7 @@ Nous ne traiterons pas des solutions techniques mises en place (car elles n'ont 
 
 Nous avons choisi l'outil Helm pour être l'équivalent de Universe dans le cadre de Kubernetes. Ce choix a été fait pour deux raisons : le nombre de charts Helm déja existant est conséquent, et les applications qui rendent un service équivalent (Kubeapps, Rancher,...) reposent sur cet outil. 
 \subsection{Phase 1: Afficher des catalogues}
-Au cours de cette première partie, nous allons comparer le format de templatings d'Universe et de Helm, dans le but d'en extraire des informations communes. Si l'on compare la description du universe.json \footnote{\url{https://Inseefrlab.github.io/Universe-Datascience/universe.json}} avec celle du index.yaml du répertoire Helm \footnote{\url{https://Inseefrlab.github.io/helm-charts-datascience/index.yaml}}, on remarque que les deux sont à peu de choses près composés d'une liste de paquets\footnote{Le fichier universe.json n'est constitué que d'un tableau de paquets, alors que le index.yaml contient en plus la date de génération du fichier et la version de l'API Kubernetes avec laquelle ce Helm repository est compatible.}. \\ 
+Au cours de cette première partie, nous allons comparer le format de templatings d'Universe et de Helm, dans le but d'en extraire des informations communes. Si l'on compare la description du universe.json du répertoire Universe \footnote{\url{https://Inseefrlab.github.io/Universe-Datascience/universe.json}} avec celle du index.yaml du répertoire Helm \footnote{\url{https://Inseefrlab.github.io/helm-charts-datascience/index.yaml}} on remarque que les deux sont à peu de choses près composés d'une liste de paquets\footnote{Le fichier universe.json n'est constitué que d'un tableau de paquets, alors que le index.yaml contient en plus la date de génération du fichier et la version de l'API Kubernetes avec laquelle ce Helm repository est compatible.}. \\ 
 
 % \begin{wrapfigure}[21]{r}{0.4\textwidth}
 % \renewcommand{\figurename}{Tableau}
@@ -655,7 +655,7 @@ L'ensemble des catalogues proposé par Onyxia est décrit dans un fichier JSON. 
 Au cours de cette première partie, la principale difficulté provient des catalogues Helm. En effet, DC/OS propose une dépendance Maven permettant de convertir le fichier universe.json en objet Java. Il n'existe cependant pas d'équivalent pour Helm. Il a donc fallu implémenter à la main les classes pour réaliser la conversion de la description du répertoire Helm (index.yaml) en objet Java. Il a également fallu exécuter des commandes Helm (notamment pour l'ajout du répertoire dans ceux connus par Helm). Je n'ai trouvé aucune dépendance Java qui le permettait. Il a donc fallu ajouter à Onyxia un module permettant d'interagir avec Helm, par l'intermédiaire d'exécution de lignes de commande depuis Java, ce qui a aussi impliqué d'ajouter Helm et Kubernetes à l'image Docker d'Onyxia.
 
 \subsection{Phase 2: Lancer des services et les configurer}
-Cette partie débute au moment où l'utilisateur se retrouve sur la page de configuration de son service sur Onyxia. Que le service provienne d'un paquet Universe ou Helm, l'expérience utilisateur est la même mais l'implémentation diffère. En effet, lors de la création d'un service on a le workflow \footnote{On ne fait pas apparaître ici comment Onyxia-ui récupère les informations techniques de l'utilisateur (Vault, Git, MinIO).} suivant : 
+Cette partie débute au moment où l'utilisateur se retrouve sur la page de configuration de son service sur Onyxia. Que le service provienne d'un paquet Universe ou Helm, l'expérience utilisateur est la même mais l'implémentation diffère. En effet, lors de la création d'un service on a le workflow \footnote{On ne fait pas apparaître ici comment Onyxia-UI récupère les informations techniques de l'utilisateur (Vault, Git, MinIO).} suivant : 
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Diagramme}
 \includegraphics[scale=0.6]{Pictures/onyxia/publish-service.png}
@@ -668,7 +668,7 @@ Dans le cas Helm ou Universe, Onyxia-UI envoie la configuration du service à On
 
 Les admissions-controller parcourent l'ensemble de l'objet configuration et y ajoute la clé et la valeur du paramètre qu'ils auront générés. Ainsi, dans le cas Universe et Helm, on ne possède pas les mêmes admissions-controller : \\
 \begin{itemize}
-    \item Pour Universe, on a un admission-controller qui va gérer le nom du service. En effet, Marathon ne possède pas la notion de namespace, mais plutôt de dossier \footnote{L'innovation a fait le choix que les services demandés par une personne se situent dans l'arborescence suivante users/idep/.} et ce dossier est déterminé en fonction de l'id du service. On doit donc injecter User-idep- dans le nom du service. Par ailleurs, un dossier ne peut pas contenir deux noms de service identiques, il faut donc randomiser le nom du service. Ainsi, l'admission controller ajoute un nombre aléatoire à la suite du nom du service (pour VScode on aurait par exemple users/idep/vscode-1234).\\
+    \item Pour Universe, on a un admission-controller qui va gérer le nom du service. En effet, Marathon ne possède pas la notion de namespace, mais plutôt de dossier \footnote{L'innovation a fait le choix que les services demandés par une personne se situent dans l'arborescence suivante users/idep/.} et ce dossier est déterminé en fonction de l'id du service. Pour qu'un service soit placer sous l'arborescence folder/subfolder l'id du service doit être de la forme folder-subfolder. On doit donc injecter users-idep- dans le nom des service. Par ailleurs, un dossier ne peut pas contenir deux noms de service identiques, il faut donc randomiser le nom du service. Ainsi, l'admission controller ajoute un nombre aléatoire à la suite du nom du service (pour VScode on aurait par exemple users/idep/vscode-1234).\\
     
     \item Universe utilise également un admission-controller qui va ajouter des labels (étiquettes) au service afin de le "marquer" comme un service déployé par Onyxia. \\
     
@@ -690,22 +690,23 @@ Durant cette partie, les difficultés sont venues de la partie Helm. En effet, D
 
 Pour pouvoir installer une application en utilisant Helm, il fallait d'abord que l'utilisateur possède un namespace dans Kubernetes. Pour cela, nous avons dû autoriser Onyxia à créer des namespaces et faire en sorte qu'Onyxia puisse dialoguer avec Kubernetes. Il existe deux bibliothèques pour communiquer avec Kubernetes depuis Java, l'officielle (\url{https://github.com/kubernetes-client/java}) et celle proposée par fabri8 (\url{https://github.com/fabric8io/kubernetes-client}). Ces deux bibliothèques communiquent avec l'API de Kubernetes (et non avec kubectl). Nous avons choisi la deuxième car elle est plus complète et plus simple d'utilisation. \newline
 
-Afin qu'Onyxia puisse créer des namespaces, il fallait lui donner des droits dans le cluster Kubernetes. Initialement, nous voulions lui donner les droits cluster-admin\footnote{Clsuter-admin signifie que l'application a le droit de créer toutes sortes de ressources dans le cluster.} uniquement sur l'ensemble des namespaces commençant par "user-" (c'est-à-dire les namespaces qu'Onyxia devait gérer et servant à déployer les services des utilisateurs). Mais cela n'est pas possible actuellement\footnote{Issue disponible ici : \url{https://github.com/kubernetes/kubernetes/issues/56582} fermée mais non résolue.}, nous lui avons donc donné le rôle cluster-admin sur l'ensemble des namespaces (ce n'est pas idéal puisque Onyxia pourrait donc interférer sur des namespaces qui ne lui sont pas dédiés).
+Afin qu'Onyxia puisse créer des namespaces, il fallait lui donner des droits dans le cluster Kubernetes. Initialement, nous voulions lui donner les droits admin\footnote{admin signifie que l'application a le droit de créer toutes sortes de ressources dans le namespace.} uniquement sur l'ensemble des namespaces commençant par "user-" (c'est-à-dire les namespaces qu'Onyxia devait gérer et servant à déployer les services des utilisateurs). Mais cela n'est pas possible actuellement\footnote{Ticket d'incident disponible ici : \url{https://github.com/kubernetes/kubernetes/issues/56582} fermée mais non résolue.}, nous lui avons donc donné le rôle cluster-admin, ie admin sur l'ensemble des namespaces (ce n'est pas idéal puisque Onyxia pourrait donc interférer sur des namespaces qui ne lui sont pas dédiés).
 
 \subsection{Phase 3: Récupérer des services, leurs configurations et les arrêter}
 La partie consistant à récupérer les services, leurs configurations et à pouvoir les stopper a sûrement été la plus facile dans la mise en place. Des différences subsistent néanmoins dans le comportement des deux orchestrateurs. \\
 
 La principale différence réside dans le fait que pour les paquets Universes, l'ensemble des actions se fait par l'intermédiaire du client Marathon  et les résultats sont lus à l'aide des classes fournies par DC/OS. Alors que dans le cas des paquets Helm, l'ensemble des actions se fait depuis Helm et aucune librairie facilitant la lecture des résultats n'existe.\\
 
-\begin{table}[H]
-\hspace{-1.5cm}
-\begin{tabular}{@{}lll@{}}
-\toprule
-                                                                                     & Universe             & Helm                                                                                                                             \\ \midrule
-Arrêter un service                                                                   & requête sur endpoint & Helm rm nomRelease -n namespace                                                                                                  \\
-\begin{tabular}[c]{@{}l@{}}Lister mes services + \\ Détail d'un service\end{tabular} & requête sur endpoint & \begin{tabular}[c]{@{}l@{}}Helm ls -n namespace + \\ Helm get manifest nomRelease -n namespace pour chaque release\end{tabular} \\ \bottomrule
-\end{tabular}
-\end{table}
+% \begin{table}[H]
+% \hspace{-1.5cm}
+% \begin{tabular}{@{}lll@{}}
+% \toprule
+%                                                                                      & Universe             & Helm                                                                                                                             \\ \midrule
+% Arrêter un service                                                                   & requête sur endpoint & Helm rm nomRelease -n namespace                                                                                                  \\
+% \begin{tabular}[c]{@{}l@{}}Lister mes services + \\ Détail d'un service\end{tabular} & requête sur endpoint & \begin{tabular}[c]{@{}l@{}}Helm ls -n namespace + \\ Helm get manifest nomRelease -n namespace pour chaque release\end{tabular} \\ \bottomrule
+% \end{tabular}
+% \caption{Comparaison des processus dans Helm et Universe}
+% \end{table}
 Pour Marathon, lister les services d'un utilisateur nécéssite de réaliser une requête à l'orchestrateur en précisant le dossier de l'utilisateur. L'utilisateur pouvant déployer des services dans ce dossier par d'autres moyens qu'Onyxia, nous rajoutons un filtre sur les labels : seuls les déploiements ayant un label Onyxia doivent être renvoyés.\\
 
 Pour Helm, chaque requête sur Onyxia-API pour lister les services d'un utilisateur résulte en fait en n+1 requêtes (n étant le nombre de services). En effet, coté API on doit d'abord exécuter une première ligne de commande pour lister le nom des services qui s'exécutent dans le namespace attribué à l'utilisateur par Onyxia (où seul Onyxia peut déployer). Ensuite, il faut faire une requête par service pour récupérer les détails le concernant. Ce qui conduit au final à n+1 requêtes (en comparaison, il suffit d'une seule requête pour les paquets Universes). \\
@@ -719,11 +720,11 @@ La disponibilité de la plateforme de l’innovation est un sujet très importan
 
 Afin de se prémunir de certains problèmes, il est important de disposer d’outils de surveillance au sein du cluster. En plus des outils natifs proposé par DC/OS ou par Kubernetes (les différents dashboards), on retrouve des outils externes disponibles sur les deux orchestrateurs.\\
 
-Les deux orchestrateurs permettent de déployer facilement les outils Prometheus et Grafana. Ces outils vont permettre d'agréger l'ensemble des métriques disponibles dans le cluster au même endroit. 
+Les deux orchestrateurs permettent de déployer facilement les outils Prometheus et Grafana. Ces outils vont permettre d'agréger l'ensemble des métriques disponibles dans le cluster au même endroit. \\
 
-Ces même outils permettent de réaliser de la traçabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Hormis les outils de monitoring tels que les dashboards ou Prometheus et Grafana, il existe des outils (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émises par l’utilisateur.\\
+Ces même outils permettent de réaliser de la traçabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Le traçage permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement.\\
 
-La CNCF\footnote{Cloud Native Computing Foundation} recommande l’utilisation de l’outil Jaeger afin de réaliser du traçage au sein d’une architecture conteneurisée. Le traçage permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement.\\
+Hormis les outils de monitoring tels que les dashboards ou Prometheus et Grafana, il existe des outils (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émises par l’utilisateur. La CNCF recommande l’utilisation de l’outil Jaeger afin de réaliser du traçage au sein d’une architecture conteneurisée.\\
 
 L'annexe \ref{securite} propose des informations complémentaires sur les sources de failles de sécurité dans un cluster, un zoom sur le fonctionnement de Prometheus-Grafana et quelques propositions de pratiques plus ou moins simples à mettre en place afin de garantir une sécurité optimale. 
 
