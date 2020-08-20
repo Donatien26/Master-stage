@@ -290,7 +290,7 @@ Enfin, en pratique on s'aperçoit qu'un cluster Kubernetes peut gérer jusqu'à 
 \section{Déployer une application : deux approches différentes}
 Nous ne présenterons pas ici le code nécéssaire pour le déploiement d'une application (le code de déploiement d'une application dans l'un ou l'autre orchestrateur est présent en annexe \ref{A}), mais les différences entre les deux approches.
 \paragraph{Marathon}
- Marathon utilise des fichiers JSON\footnote{JSON (JavaScript Object Notation) est un format de fichier dérivé de la notation des objets du langage JavaScript. Comme XML, ce format permet de représenter de l’information structurée.} pour la configuration des déploiements. La configuration du déploiement s'effectue par l'intermédiaire d'un seul fichier. Dans ce fichier, on retrouve notamment : l'image que l'on veut utiliser, l'URL sur laquelle le service sera rendu accessible, les variables d'environnements qui seront par la suite injectées dans le conteneur, le nombre de réplicas, la limitation de CPU et/ou de mémoire. On peut également, lors du déploiement du service, télécharger au préalable un ou plusieurs fichiers et les ajouter directement au conteneur.  L'envoi de ce fichier à Marathon se fait par l'intermédiaire de l'API via une requête POST\footnote{Une requête POST est une requête WEB permettant d'envoyer du contenu à un serveur.} ou de la CLI\footnote{CLI signifie Command Line Interface (en français, interface en ligne de commande).} DC/OS.
+ Marathon utilise des fichiers JSON\footnote{JSON (JavaScript Object Notation) est un format de fichier dérivé de la notation des objets du langage JavaScript. Comme XML, ce format permet de représenter de l’information structurée.} pour la configuration des déploiements. La configuration du déploiement s'effectue par l'intermédiaire d'un seul fichier. Dans ce fichier, on retrouve notamment : l'image que l'on veut utiliser, l'URL sur laquelle le service sera rendu accessible, les variables d'environnement qui seront par la suite injectées dans le conteneur, le nombre de réplicas, la limitation de CPU et/ou de mémoire. On peut également, lors du déploiement du service, télécharger au préalable un ou plusieurs fichiers et les ajouter directement au conteneur.  L'envoi de ce fichier à Marathon se fait par l'intermédiaire de l'API via une requête POST\footnote{Une requête POST est une requête WEB permettant d'envoyer du contenu à un serveur.} ou de la CLI\footnote{CLI signifie Command Line Interface (en français, interface en ligne de commande).} DC/OS.
  
 \paragraph{Kubernetes}
 Kubernetes utilise des fichiers YAML\footnote{YAML (Yet Another Markup Language) est un format de représentation de données.} pour la configuration des déploiements. Le déploiement d'une application se fait par l'assemblage de plusieurs fichiers (qui sont en fait la description de ressources). Lors d'un déploiement, l'utilisateur doit configurer au moins trois objets k8s (par le biais de trois fichiers ou manifestes) : l'objet deployement (déploiement), l'objet service et l'objet ingress. Le premier sert à créer un ensemble de Pods \footnote{Un Pod est la plus petite unité logique de k8s. Il encapsule un conteneur applicatif. Un Pod est attaché à un node, son existence est temporaire, on peut facilement le répliquer sur un autre node. Chaque Pod a une adresse IP virtuelle unique au sein du cluster, ce qui permettra aux autres Pods du cluster de communiquer avec ce dernier.} dans notre cluster, ce Pod est situé sur un des nodes, mais il n'est pas accessible (ni de l'intérieur ni de l'extérieur du cluster). Le service \footnote{Un service peut être défini comme un ensemble logique de Pods exposés en tant que service réseau. C'est un niveau d'abstraction au-dessus du Pod, qui fournit une adresse IP et un nom DNS unique pour un ensemble de Pods.} va permettre d'exposer à l'intérieur du cluster ce Pod. Enfin, l'ingress permettra d'exposer ce service au monde extérieur. Cette séparation par objet est à la base de Kubernetes. D'autre objets peuvent venir compléter la modèle, par exemple, l'ajout de variables d'environnement passe par l'intermédiaire d'un objet configMaps.\\
@@ -309,8 +309,8 @@ La communication avec le cluster k8s, notamment pour l'envoi des fichiers de con
 Fichiers/déploiement         & un seul         & Plusieurs       \\
 Language                     & JSON           & YAML            \\
 Isolation entre utilisateur & Oui (mais avec de la configuration)            & Oui nativement (namespace) \\
-Variable d'environnements    & Balise env     & ConfigMap       \\
-Télechargement de ressources & Balise Fetch   & InitContainer   \\
+Variable d'environnement    & Balise env     & ConfigMap       \\
+Téléchargement de ressources & Balise Fetch   & InitContainer   \\
 Stockage                     & Balise Stockage & VolumeClaim     \\
 Communiquer & DC/OS CLI, API, Marathon UI & kubectl CLI, API\\
 \bottomrule
@@ -389,8 +389,8 @@ Les changements via l’interface utilisateur sont limités au maximum. Tout cha
 On retrouve deux modèles pour implémenter le GitOps: le modèle en push et le modèle en pull. Les deux modèles reposent sur la présence de deux répertoires Git : le premier contenant le code de l'application, le second contenant les fichiers pour le déploiement. Les étapes suivantes ont lieu dans les deux modèles : 
 \begin{itemize}
      \item Un nouveau commit déclenche le pipeline de compilation de l'application (appelée "build"). Ce pipeline de build compile l'application puis lance les tests.
-    \item Si les tests passent, alors on construit l'image docker associée à l'application puis on la push\footnote{Push, dans le cadre d'un outil de gestion de version comme Git, signifie envoyer les modifications du répertoire local au répertoire distant (Git).} sur le répertoire d'image.
-    \item Enfin, le pipeline de CI se termine en pushant sur le répertoire contenant la configuration, la nouvelle version de l'image à utiliser.
+    \item Si les tests passent, alors on construit l'image docker associée à l'application puis on la  stocke dans un répertoire d'image (appelé généralement Docker-Registry).
+    \item Enfin, le pipeline de CI se termine en pushant\footnote{Push, dans le cadre d'un outil de gestion de version comme Git, signifie envoyer les modifications du répertoire courant vers un autre répertoire.} sur le répertoire contenant la configuration, la nouvelle version de l'image à utiliser.
 \end{itemize}
 C'est par la suite que l'on distingue le modèle en push du modèle en pull.
 
@@ -422,7 +422,8 @@ Dans le cadre du modèle en pull, un opérateur surveille en continue le répert
 \begin{itemize}
     \item Le répertoire Git contient l'historique des modifications. Cela permet de voir comment l'infrastructure a évolué. Les messages de commits s'ajoutent à la documentation déjà existante. De plus, cela permet de voir le déploiement comme du code. On peut donc désormais pratiquer les techniques de "pair programming"\footnote{Le pair programming est une technique de développement logiciel agile dans laquelle deux programmeurs travaillent ensemble sur un même poste de travail. L'un, le driver, écrit le code tandis que l'autre, l'observateur, examine chaque ligne de code au fur et à mesure qu'elle est tapée. Les deux programmeurs changent fréquemment de rôle
 } ou d'"extreme programming"\footnote{Méthode de développement d'application consistant à développer une application par sprint très court.} qui ne peuvent être que bénéfiques. En effet, ces pratiques apportent beaucoup sur la qualité de code et de partage de connaissances sur le projet.
-    \item Les tickets kanboard \footnote{Dans le développement de logiciel, un système Kanban  est utilisé afin de limiter les tâches-en-cours. Ce système s'appuie sur les tickets kanboard. Un ticket Kanboard représente une tache à effectuer.} n'ont plus de raison d'être et sont remplacés par des merges request. La merge request explique les besoins et le propriétaire du dépôt vérifie la validité de la merge request et l'accepte (ou non). On a donc deux avantages :  une réduction des erreurs humaines et un partage de connaissances.
+    % \item Les tickets kanboard \footnote{Dans le développement de logiciel, un système Kanban  est utilisé afin de limiter les tâches-en-cours. Ce système s'appuie sur les tickets kanboard. Un ticket Kanboard représente une tache à effectuer.} n'ont plus de raison d'être et sont remplacés par des merges request. La merge request explique les besoins et le propriétaire du dépôt vérifie la validité de la merge request et l'accepte (ou non). On a donc deux avantages :  une réduction des erreurs humaines et un partage de connaissances.
+    \item La mise en production d'une application se déroule comme le reste du code. Une nouvelle version d'une application à déployer passe par la demande d'une merge request. La merge request explique les besoins et le propriétaire du dépôt vérifie la validité de la merge request et l'accepte (ou non). S’il y a des points à revoir, ils seront documentés et expliqués dans la merge request. L’approbation de la merge request devient la validation des modifications.
     \item Revenir en arrière suite à un déploiement, revient simplement à annuler la dernière fusion (faire un git revert sur le dernier commit).
     \item Comme tous les changements passent par Git, les modifications sont auditables. De plus, avec le  modèle en pull, seul l’opérateur a le droit de déployer dans le cluster. Il n'y a donc plus besoin de stocker les identifiants du cluster dans GitLab pour le CI. On a donc moins d'identifiants d'accès au cluster stockés à divers endroits, on limite ainsi les problèmes de sécurité.
 \end{itemize}
@@ -464,9 +465,9 @@ Les solutions ci-dessus sont majoritairement orientées Kubernetes. En effet, il
 \end{interrupt}
 \section{Argo: Vers une architecture conteneurisée en production}
 
-ArgoCD suit le modèle en pull GitOps, qui consiste à utiliser les dépôts Git comme source de vérité pour définir l'état d'application souhaité. C'est un projet relativement jeune (lancé en 2017) mais qui fait parti des outils recommandés par la CNCF dans sa carte de route pour concevoir une plateforme cloud \footnote{\url{https://github.com/cncf/trailmap/blob/master/CNCF_TrailMap_latest.pdf}}. C'est également l'outil utilisé par le Ministère de l'Intérieur pour la mise en place de sa plateforme cloud.  ArgoCD possède son Chart Helm qui lui permet d'être facilement déployable dans Kubernetes et il ne fonctionne qu'avec des ressources Kubernetes. ArgoCD a été choisi pour la plateforme de l'innovation car il permet notamment l'authentification OIDC\footnote{Authentification de type open-id connect, authentification à jeton}, la gestion de droits et il propose une interface graphique. \newline
+ArgoCD suit le modèle en pull GitOps, qui consiste à utiliser les dépôts Git comme source de vérité pour définir l'état d'application souhaité. C'est un projet relativement jeune (lancé en 2017) mais qui fait parti des outils recommandés par la CNCF dans sa carte de route pour concevoir une plateforme cloud \footnote{\url{https://github.com/cncf/trailmap/blob/master/CNCF_TrailMap_latest.pdf}}. C'est également l'outil utilisé par le Ministère de l'Intérieur pour la mise en place de sa plateforme cloud.  ArgoCD possède son Chart Helm qui lui permet d'être facilement déployable dans Kubernetes et il ne fonctionne qu'avec des ressources Kubernetes. ArgoCD a été choisi pour la plateforme de l'innovation car car il permet de s'interfacer avec les outils d'authentification standards déjà en place, la gestion de droits et il propose une interface graphique. \newline
 
-ArgoCD permet d'automatiser le déploiement d'applications dans les environnements cibles spécifiés. ArgoCD est un contrôleur Kubernetes qui surveille en permanence les applications fonctionnant dans le cluster. Il les compare à l'état défini dans le dépôt Git. S'il détecte une déviation, il marque une application comme étant "OutOfSync"\footnote{Perte de la synchronisation} (indiquant que le cluster ne reflète pas actuellement la branche master du dépôt) et le cas échéant il la resynchronise avec le répertoire Git.  ArgoCD est compatible avec plusieurs types de manifestes \footnote{Un manifeste est un fichier JSON ou YAML qui permet de déclarer le type d'application à exécuter et le nombre de réplicas nécessaires pour exécuter un système sain.} Kubernetes: des templates d'application avec Kustomize, des Charts Helm, des applications ksonnet, des fichiers Jsonnet, ou encore directement des fichiers YAML.\newline
+ArgoCD permet d'automatiser le déploiement d'applications dans les environnements cibles spécifiés. ArgoCD est un contrôleur Kubernetes qui surveille en permanence les applications fonctionnant dans le cluster. Il les compare à l'état défini dans le dépôt Git. S'il détecte une déviation, il marque une application comme étant "OutOfSync"\footnote{Perte de la synchronisation} (indiquant que le cluster ne reflète pas actuellement la branche master du dépôt) et le cas échéant il la resynchronise avec le répertoire Git.  ArgoCD est compatible avec plusieurs types de manifestes \footnote{Un manifeste est un fichier JSON ou YAML qui permet de déclarer le type d'application à exécuter et le nombre de réplicas nécessaires pour exécuter un système sain.} Kubernetes: des templates d'application avec Kustomize, des Charts Helm, ou encore directement des fichiers YAML.\newline
 
 
 
@@ -496,7 +497,7 @@ Avant de se lancer dans le GitOps, il faut d'abord que notre projet réponde à 
 \begin{itemize}
     \item Le downtime : Si un conteneur (ou pire un worker node) contenant une application dysfonctionne pour une raison quelconque, il faut que l'orchestrateur relance cette application. Durant ce laps de temps, l'application peut être indisponible. On parle alors de downtime. Un moyen de palier à ce problème est d'avoir plusieurs répliques de notre application réparties sur plusieurs nodes, pour qu'en cas de bug d'une des répliques, les autres prennent le relais. Il est donc interdit à l'application de posséder des données en local. \\
     
-    \item La surcharge : Il peut arriver que le cluster soit en surcharge suite à une trop forte demande des utilisateurs, ou encore suite la perte d'un node obligeant le déplacement des applications sur un autre node (perte de ressources entraînant une surcharge). Une surcharge peut également avoir lieu lorsque l'ensemble des  applications consomme toutes les ressources disponibles. Pour cela on a deux solutions : prévoir large (c'est-à-dire surdimensionner le cluster, mais cela entraîne une non utilisation des ressources) ou bien faire de l'autoscaling (littéralement mise à l'échelle automatique, c'est-à-dire laisser automatiquement le cluster démarrer des worker-nodes ou des conteneurs afin de répondre à la charge, le problème est que cela peut être coûteux). \footnote{C'est d'ailleurs à cause de cette raison que Amazon s'est initialement converti en fournisseur cloud : leur serveur était surchargé pendant certaines périodes de l'année (fêtes de fin d'année). Ils ont donc décidé de louer les ressources qu'ils n'utilisaient pas le reste de l'année, afin de rentabiliser leur infrastructure.} Dans tout les cas l'application se doit donc d'être scalable\footnote{(littéralement mise à l'échelle) Une application est dite scalable si elle possède la capacité à maintenir ses fonctionnalités et ses performances en cas de forte demande (montée en charge). Elle doit être scalable verticalement (augmentation des ressources allouées :  CPU, mémoire...) et scalable horizontalement (augmentation du nombre de répliques de l'application), le premier étant plus facile à garantir que le second.}.\\
+    \item La surcharge : Il peut arriver que le cluster soit en surcharge suite à une trop forte demande des utilisateurs, ou encore suite la perte d'un node obligeant le déplacement des applications sur un autre node (perte de ressources entraînant une surcharge). Une surcharge peut également avoir lieu lorsque l'ensemble des  applications consomme toutes les ressources disponibles. Pour cela on a deux solutions : prévoir large (c'est-à-dire surdimensionner le cluster, mais cela entraîne une non utilisation des ressources) ou bien faire de l'autoscaling (littéralement pouvant-être mis à l'échelle automatique, c'est-à-dire laisser automatiquement le cluster démarrer des worker-nodes ou des conteneurs afin de répondre à la charge, le problème est que cela peut être coûteux). \footnote{C'est d'ailleurs à cause de cette raison que Amazon s'est initialement converti en fournisseur cloud : leur serveur était surchargé pendant certaines périodes de l'année (fêtes de fin d'année). Ils ont donc décidé de louer les ressources qu'ils n'utilisaient pas le reste de l'année, afin de rentabiliser leur infrastructure.} Dans tout les cas l'application se doit donc d'être scalable\footnote{(littéralement mise à l'échelle) Une application est dite scalable si elle possède la capacité à maintenir ses fonctionnalités et ses performances en cas de forte demande (montée en charge). Elle doit être scalable verticalement (augmentation des ressources allouées :  CPU, mémoire...) et scalable horizontalement (augmentation du nombre de répliques de l'application), le premier étant plus facile à garantir que le second.}.\\
 
     \item La perte de donnée : de la même façon que précédemment, aucune donnée ne doit être attachée à un conteneur. Il faut donc, dans le cas du stockage de données (comme pour une base de données par exemple), avoir une certaine redondance des données et/ou pouvoir les externaliser. Les applications stateless\footnote{(ou sans état) Désigne une application qui ne sauvegarde pas les données de l'utilisateur générées lors d'une session pour les utiliser lors de la session suivante avec cet utilisateur} ne possèdent aucune donnée en local, tout leur état étant déporté sur une autre application.\\
 \end{itemize}
@@ -531,13 +532,13 @@ L'application permet à l'utilisateur non connecté (non authentifié par l'appl
 
 La spécifité d'Onyxia est que l'ensemble des services à la demande qu'elle offre aux utilisateurs sont pré-configurés. Aucune configuration d'un point de vue technique n'est demandée à l'utilisateur. En effet, lors d'un déploiement, Onyxia agrège trois sources de données afin de configurer le service de l'utilisateur. \\
 
-Onyxia-UI fournit des données provenant de deux sources : les données saisies par l'utilisateur (la mémoire ou le nombre de CPU alloué pour le service) et les données permettant l'accès aux autres services (la configuration git, vault et/ou minIO). Onyxia-API apporte, elle aussi, des informations comme le choix de l'URL du futur service déployé\footnote{Si deux utilisateurs possédaient chacun un service différent mais avec la même URL, les utilisateurs auraient tantôt accès à un service, tantôt à l'autre, de manière totalement aléatoire.}.\\
+Onyxia-UI fournit des données provenant de deux sources : les données saisies par l'utilisateur (la mémoire, le nombre de CPU alloué pour le service, ou la version du service utilisé qui sont préconfiguré mais que l'utilisateur peut éventuellement changer) et les données permettant l'accès aux autres services (la configuration git, vault et/ou minIO). Onyxia-API apporte, elle aussi, des informations comme le choix de l'URL du futur service déployé\footnote{Si deux utilisateurs possédaient chacun un service différent mais avec la même URL, les utilisateurs auraient tantôt accès à un service, tantôt à l'autre, de manière totalement aléatoire.}.\\
 
 Ensuite, Onyxia-API dispose pour chaque service d'un squelette permettant de le déployer. Ce squelette est alors rempli à l'aide des valeurs précédemment créées.\\
 
-Enfin, si le lancement du service n'est pas une simulation \footnote{En effet, onyxia permet à ces utilisateurs de lancer une application en mode simulation pour permettre aux personnes les plus motivées de découvrir la configuration de leurs services.}, Onyxia envoie le déploiement à l'orchestrateur, qui va désormais s'occuper de déployer et de maintenir en vie le service jusqu'à son extinction.
+Enfin Onyxia envoie le déploiement à l'orchestrateur, qui va désormais s'occuper de déployer et de maintenir en vie le service jusqu'à son extinction.
 
-Ce workflow\footnote{Un workflow, ou « flux de travaux » ou encore « flux opérationnel » en français, est la représentation d'une suite de tâches ou opérations effectuées par une personne, un groupe de personnes, une application,... } est pour le moment uniquement réalisable avec Marathon et repose sur l'utilisation des Universes.\\
+Ce workflow\footnote{Un workflow, ou « flux de travaux » ou encore « flux opérationnel » en français, est la représentation d'une suite de tâches ou opérations effectuées par une personne, un groupe de personnes, une application,... } était à ce moment uniquement réalisable avec Marathon et reposait sur l'utilisation des Universes.\\
 
 
 
@@ -553,7 +554,7 @@ Ce workflow\footnote{Un workflow, ou « flux de travaux » ou encore « flux op�
 
 
 \section{Onyxia : Marathon et/ou Kubernetes ?}
-Nous ne traiterons pas des solutions techniques mises en place (car elles n'ont pas grand intérêt), mais plutôt des points communs entre les deux solutions et des difficultés rencontrées, au cours de l'implémentation de Kubernetes dans Onyxia. Dans un premier temps, nous avions évoqué d'interfacer Onyxia avec Kubeapps un Chart Helm permettant de déployer des Charts Helm dans un cluster Kubernetes (voir en annexe \ref{kubeapps} pour plus de détails), mais la solution n'a finalement pas été retenue.\newline
+Nous ne traiterons pas des solutions techniques mises en place, mais plutôt des points communs entre les deux solutions et des difficultés rencontrées, au cours de l'implémentation de Kubernetes dans Onyxia. Dans un premier temps, nous avions évoqué d'interfacer Onyxia avec Kubeapps un Chart Helm permettant de déployer des Charts Helm dans un cluster Kubernetes (voir en annexe \ref{kubeapps} pour plus de détails), mais la solution n'a finalement pas été retenue.\newline
 
 Nous avons choisi l'outil Helm pour être l'équivalent de Universe dans le cadre de Kubernetes. Ce choix a été fait pour deux raisons : le nombre de charts Helm déja existant est conséquent, et les applications qui rendent un service équivalent (Kubeapps, Rancher,...) reposent sur cet outil. 
 \subsection{Phase 1: Afficher des catalogues}
@@ -603,7 +604,6 @@ Au cours de cette première partie, nous allons comparer le format de templating
 % \end{tabular}
 % \caption[]{}
 % \end{wrapfigure}
-\vspace{-1cm}
 Dans la description des paquets, certains attributs sont communs, comme le nom du paquet, la description ou encore la version.\newline
 
 Il y a cependant une nette différence au niveau des fichiers de configurations et des templates. En effet, dans le cadre d'un paquet Universe, le template ainsi que la configuration (par défaut) sont directement dans la description du paquet. Alors que pour le paquet Helm (Chart), le fichier de templating ainsi que la configuration sont dans un fichier compressé disponible sur l'URL qui accompagne le paquet. \\
@@ -652,13 +652,14 @@ Un répertoire Helm ou Universe est vu comme un catalogue. Chacun de ces catalog
 L'ensemble des catalogues proposé par Onyxia est décrit dans un fichier JSON. Ce fichier comporte notamment le type du catalogue (Universe ou Helm) et l'URL sur lequel se trouve le fichier décrivant le catalogue (respectivement le universe.json ou le index.yaml). Le workflow ci-contre s'exécute alors périodiquement afin d'ajouter les différents paquets dans Onyxia.
 
 \subsubsection{Difficultés rencontrées}
-Au cours de cette première partie, la principale difficulté provient des catalogues Helm. En effet, DC/OS propose une dépendance Maven permettant de convertir le fichier universe.json en objet Java. Il n'existe cependant pas d'équivalent pour Helm. Il a donc fallu implémenter à la main les classes pour réaliser la conversion de la description du répertoire Helm (index.yaml) en objet Java. Il a également fallu exécuter des commandes Helm (notamment pour l'ajout du répertoire dans ceux connus par Helm). Je n'ai trouvé aucune dépendance Java qui le permettait. Il a donc fallu ajouter à Onyxia un module permettant d'interagir avec Helm, par l'intermédiaire d'exécution de lignes de commande depuis Java, ce qui a aussi impliqué d'ajouter Helm et Kubernetes à l'image Docker d'Onyxia.
+Au cours de cette première partie, la principale difficulté provient des catalogues Helm. En effet, DC/OS propose une dépendance Maven permettant de convertir le fichier universe.json en objet Java. Il n'existe cependant pas d'équivalent pour Helm. Il a donc fallu implémenter à la main les classes pour réaliser la conversion de la description du répertoire Helm (index.yaml) en objet Java. Il a également fallu exécuter des commandes Helm (notamment pour l'ajout du répertoire dans ceux connus par Helm). Je n'ai trouvé aucune dépendance Java qui le permettait. Il a donc fallu ajouter à Onyxia un module permettant d'interagir avec Helm, par l'intermédiaire d'exécution de lignes de commande depuis Java, ce qui a aussi impliqué d'ajouter Helm (et Kubernetes qui est nécessaire au fonctionnement de Helm) à l'image Docker d'Onyxia.
 
 \subsection{Phase 2: Lancer des services et les configurer}
 Cette partie débute au moment où l'utilisateur se retrouve sur la page de configuration de son service sur Onyxia. Que le service provienne d'un paquet Universe ou Helm, l'expérience utilisateur est la même mais l'implémentation diffère. En effet, lors de la création d'un service on a le workflow \footnote{On ne fait pas apparaître ici comment Onyxia-UI récupère les informations techniques de l'utilisateur (Vault, Git, MinIO).} suivant : 
-\begin{figure}[H]\centering
+\begin{figure}[H]
+\hspace{-2cm}
 \renewcommand{\figurename}{Diagramme}
-\includegraphics[scale=0.6]{Pictures/onyxia/publish-service.png}
+\includegraphics[scale=0.7]{Pictures/onyxia/publish-service.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption{Workflow du déploiement d'un service \newline}
 \end{figure}
@@ -668,7 +669,7 @@ Dans le cas Helm ou Universe, Onyxia-UI envoie la configuration du service à On
 
 Les admissions-controller parcourent l'ensemble de l'objet configuration et y ajoute la clé et la valeur du paramètre qu'ils auront générés. Ainsi, dans le cas Universe et Helm, on ne possède pas les mêmes admissions-controller : \\
 \begin{itemize}
-    \item Pour Universe, on a un admission-controller qui va gérer le nom du service. En effet, Marathon ne possède pas la notion de namespace, mais plutôt de dossier \footnote{L'innovation a fait le choix que les services demandés par une personne se situent dans l'arborescence suivante users/idep/.} et ce dossier est déterminé en fonction de l'id du service. Pour qu'un service soit placer sous l'arborescence folder/subfolder l'id du service doit être de la forme folder-subfolder. On doit donc injecter users-idep- dans le nom des service. Par ailleurs, un dossier ne peut pas contenir deux noms de service identiques, il faut donc randomiser le nom du service. Ainsi, l'admission controller ajoute un nombre aléatoire à la suite du nom du service (pour VScode on aurait par exemple users/idep/vscode-1234).\\
+    \item Pour Universe, on a un admission-controller qui va gérer le nom du service. En effet, Marathon ne possède pas la notion de namespace, mais plutôt de dossier \footnote{L'innovation a fait le choix que les services demandés par une personne se situent dans l'arborescence suivante users/idep/.} et ce dossier est déterminé en fonction de l'id du service. Pour qu'un service soit placer sous l'arborescence folder/subfolder l'id du service doit être de la forme folder-subfolder. On doit donc injecter users-idep- dans le nom des service. Par ailleurs, un dossier ne peut pas contenir deux noms de service identiques, il faut donc rendre aléatoire le nom du service. Ainsi, l'admission controller ajoute un nombre aléatoire à la suite du nom du service (pour VScode on aurait par exemple users/idep/vscode-1234).\\
     
     \item Universe utilise également un admission-controller qui va ajouter des labels (étiquettes) au service afin de le "marquer" comme un service déployé par Onyxia. \\
     
@@ -677,13 +678,13 @@ Les admissions-controller parcourent l'ensemble de l'objet configuration et y aj
 \vspace{-1cm}
 \begin{interrupt}
 \paragraph{Remarques:}
- Dans le cas de Helm, nous n'avons pas d'admission-controller qui injecte un id de service et/ou l'idep de la personne dans le nom du service, car ces derniers s'injectent au moment de l'exécution de la commande Helm par le biais des options. Helm permet l'injection du namespace (option -n) et la génération d'un identifiant aléatoire (option --generate-name). \\
+ Dans le cas de Helm, nous n'avons pas d'admission-controller qui injecte un id de service et/ou l'idep de la personne dans le nom du service, car ces derniers s'injectent au moment de l'exécution de la commande Helm par le biais des options. Helm permet l'injection du namespace et la génération d'un identifiant aléatoire. \\
  
  Toujours dans le cas de Helm, la détermination du namespace de l'utilisateur entraîne sa création par Onyxia si ce dernier n'existe pas.
 \end{interrupt}
 Ensuite, dans le cas de Universe, le template du service est rempli (fichier mustache) à l'aide de l'objet contenant la configuration. Une fois cette opération réalisée, on a un fichier marathon.json classique rempli à l'aide des valeurs précédentes. Si il s'agit d'un lancement de type simulation, alors on renvoie à l'utilisateur ce fichier, sinon on envoie ce fichier directement à Marathon par l'intermédiaire d'une requête POST.\\
 
-Pour Helm, on traduit l'objet contenant la configuration en un fichier de type values.yaml et on exécute la ligne de commande \texttt{Helm apply my-app -f my-values -n namespace} avec ou sans l'option \texttt{--dry-run} en fonction de la demande de l'utilisateur (simulation ou non). C'est donc Helm qui se charge de la récupération du template, de l'injection des valeurs ainsi que de la communication à Kubernetes du déploiement.
+Pour Helm, on traduit l'objet contenant la configuration en un fichier de type values.yaml et on exécute la ligne de commande permettant le déploiement du service par Helm. C'est donc Helm qui se charge de la récupération du template, de l'injection des valeurs ainsi que de la communication à Kubernetes du déploiement.
 
 \subsubsection{Difficultés rencontrées}
 Durant cette partie, les difficultés sont venues de la partie Helm. En effet, DC/OS propose un client Marathon (pour dialoguer directement avec Marathon) et il existe une dépendance Maven facilitant le remplissage des templates \footnote{Lien vers le projet: \url{https://github.com/spullara/mustache.java}}.\newline
@@ -771,32 +772,32 @@ Elle a d'ailleurs été utilisé par la communauté spyrale (une communauté d'a
 \section*{Architecture d'un cluster Kubernetes}
 Un cluster Kubernetes (k8s) a obligatoirement au moins un worker node. Le worker node est le serveur qui bénéficie de la plus grosse configuration en termes de CPU, mémoire, RAM puisque c'est lui qui fait tourner les conteneurs (et donc les applications).\newline 
 
-Dans un cluster k8s, le  master node est appelé control plane. Il gouverne les worker-nodes (et donc les Pods\footnote{Un Pod est un groupe d'un ou plusieurs conteneurs (comme des conteneurs Docker), ayant du stockage/réseau partagé, et une spécification sur la manière d'exécuter ses conteneurs.}) du cluster. Dans les environnements de production, afin de garantir une disponibilité de service optimale ,le control plane est répliqué sur plusieurs machines et le cluster est composé de plusieurs worker nodes, qui sont, dans le cas idéal, répartis géographiquement pour garantir une qualité de services optimale (réduction de la latence).\newline
+Dans un cluster k8s, le  master node est appelé control plane. Il gouverne les worker-nodes (et donc les Pods\footnote{Un Pod est un groupe d'un ou plusieurs conteneurs (comme des conteneurs Docker), ayant du stockage/réseau partagé, et une spécification sur la manière d'exécuter ses conteneurs.}) du cluster. Dans les environnements de production, afin de garantir une disponibilité de service optimale, le control plane est répliqué sur plusieurs machines et le cluster est composé de plusieurs worker nodes, qui sont, dans le cas idéal, répartis géographiquement pour garantir une qualité de service optimale (réduction de la latence).\newline
 
-Nous ne parlerons pas ici des public nodes. En effet, dans le cadre du stage nous avons utilisé un cluster k8s fourni par GCP (google), et dans ce cas l'ensemble de la configuration des publics nodes est gérée par le fournisseur cloud.
+Nous ne parlerons pas ici des public nodes. En effet, dans le cadre du stage nous avons utilisé un cluster k8s fourni par GCP (Google Cloud Platform). L'ensemble de la configuration des publics nodes est donc géré par le fournisseur cloud.
 
 
 \subsection*{Les composants du control-plane}
-Les composants du control plane (qui correspond au Master-node) sont ceux qui gèrent l'état global du cluster, qui détectent et réagissent en fonction des événements au sein du cluster (déploiement d'une nouvelle application ,load-balancing\footnote{répartition des requêtes sur les diverses instances d'une même application}, etc...). De manière générale, même si les composants du control plane peuvent être installés sur différentes machines, les scripts classiques déploient l'ensemble des composants du control-plane sur une seule et unique machine, sur laquelle aucun conteneur créé par un utilisateur ne peut être lancé.
+Les composants du control plane (qui correspond au master node) sont ceux qui gèrent l'état global du cluster, qui détectent et réagissent en fonction des événements au sein du cluster (déploiement d'une nouvelle application, load-balancing\footnote{Load-balancing signifie répartition de charge en français et désigne la répartition des requêtes sur les diverses instances d'une même application.}, etc.). De manière générale, même si les composants du control plane peuvent être installés sur différentes machines, les scripts classiques déploient l'ensemble des composants du control-plane sur une seule et unique machine, sur laquelle aucun conteneur créé par un utilisateur ne peut être lancé.
 
 \paragraph*{Etcd}
-Le Master node possède une base de données clés valeurs \footnote{Base de données non relationnelle qui utilise une méthode clé-valeur simple pour stocker des données. Une base de données clé-valeur stocke les données sous forme de paires clé-valeur dans lesquelles une clé sert d'identifiant unique}, où est stocké l'état du cluster Kubernetes. Elle est appelée etcd.
+Le master node possède une base de données clés valeurs \footnote{Base de données non relationnelle qui utilise une méthode clé-valeur simple pour stocker des données. Une base de données clé-valeur stocke les données sous forme de paires clé-valeur dans lesquelles une clé sert d'identifiant unique.}, où est stocké l'état du cluster Kubernetes. Elle est appelée etcd.
 
-\paragraph*{Kube-apiserver}
-L'api-server est le composant du Kubernetes control-plane qui expose l'API de Kubernetes. L'api-server est donc le point d'entrée pour l'ensemble des opérations à exécuter sur le cluster, elle fait office de passerelle vers le cluster. Elle reçoit des requêtes HTTP, elle les valide et met à jour les objets correspondants dans l'Etcd. Par définition, l'api-server doit être accessible par des clients extérieurs au cluster. Alors que les worker nodes, et donc les conteneurs, peuvent ne pas l'être. En effet, dans le cas de débuggage, l'api-server peut aussi être utilisée comme un point d'entrée vers les nodes et les Pods.
+\paragraph*{Kube-api-server}
+L'api-server est le composant du Kubernetes control-plane qui expose l'API de Kubernetes. L'api-server est donc le point d'entrée pour l'ensemble des opérations à exécuter sur le cluster, elle fait office de passerelle vers le cluster. Elle reçoit des requêtes HTTP, elle les valide et met à jour les objets correspondants dans l'etcd. Par définition, l'api-server doit être accessible par des clients extérieurs au cluster. Alors que les worker nodes, et donc les conteneurs, peuvent ne pas l'être. En effet, dans le cas de débuggage, l'api-server peut aussi être utilisée comme un point d'entrée vers les nodes et les Pods.
 
 
 \paragraph*{Kube-controller manager}
-Le kube-controler manager est le composant qui contrôle l'état du cluster en continue. Dans le monde de Kubernetes, un contrôleur est un processus qui tourne en boucle : il interroge l'api-server qui lui renvoie l'état du cluster et il effectue les changements (toujours en passant par l'api-server) de manière à ce que le cluster tende toujours vers l'état désiré. Kubernetes possède 4 contrôleurs (initialement, mais on peut en rajouter pour d'autres besoins\footnote{Afin d'exposer nos services, on a besoin d'ingress. L'ingress-controller permet par exemple de scanner l'ensemble des objets ingress et de les ajouter à sa pile.}), regroupés en un seul contrôleur: le controller-manager. Ce dernier regroupe les 4 contrôleurs suivants: 
+Le kube-controller manager est le composant qui contrôle l'état du cluster en continu. Dans le monde de Kubernetes, un contrôleur est un processus qui tourne en boucle : il interroge l'api-server qui lui renvoie l'état du cluster et il effectue les changements (toujours en passant par l'api-server) de manière à ce que le cluster tende toujours vers l'état désiré. Kubernetes possède quatre contrôleurs (initialement, mais on peut en rajouter pour d'autres besoins\footnote{Afin d'exposer nos services, on a besoin d'ingress. L'ingress-controller permet par exemple de scanner l'ensemble des objets ingress et de les ajouter à sa pile.}), regroupés en un seul contrôleur: le controller-manager. Ce dernier regroupe les quatre contrôleurs suivants: 
 \begin{itemize}
     \item Node Controller : c'est le contrôleur qui détecte les nodes en pannes et qui agit en conséquence.
-    \item Replication Controller : Il vérifie si le cluster contient bien le bon nombre de Pods pour chaque objet ReplicationController (attention on parle ici de l'objet replicationController\footnote{Un replicationController est un objet qui décrit, pour un déploiement donné, combien de réplicas d'une application sont nécessaires} et non du contrôleur en lui même).
+    \item Replication Controller : Il vérifie si le cluster contient bien le bon nombre de Pods pour chaque objet ReplicationController (attention on parle ici de l'objet replicationController\footnote{Un replicationController est un objet qui décrit, pour un déploiement donné, combien de réplicas d'une application sont nécessaires} et non du contrôleur en lui-même).
     \item Endpoints Controller: Il définit les objets Endpoints (c’est-à-dire les Services qui sont reliés aux Pods).
     \item Service Account et Token Controllers : C'est la partie responsable de la création des comptes par défaut et des jetons d'accès à l'API pour les nouveaux namespaces\footnote{Kubernetes prend en charge plusieurs clusters virtuels présents sur le même cluster physique. Ces clusters virtuels sont appelés namespaces.}.
 \end{itemize}
 
 \paragraph{Le cloud-controller manager}
-Ce composant permet de lier le cluster Kubernetes à la logique du fournisseur cloud. C'est une surcouche qui n'est pas toujours présente (notamment dans le cas d'une installation dite on-premise\footnote{Une installation on-Premise est une installation réalisée de A à Z sans passer par un fournisseur. L'entreprise installe toute les briques nécessaires une par une et en assure la gestion par ses propres moyens.}). Il permet notamment au fournisseur cloud d'ajouter des routes dans le cluster (à la manière d'un reverse proxy). Il ajoute également un volume-controller afin de pouvoir créer des Volumes \footnote{Un volume est un espace de stockage, indépendant du conteneur, ce qui permet de persister des données et de les récupérer même si le conteneur vient a être tuer.} et interagir avec le fournisseur cloud pour les orchestrer.
+Ce composant permet de lier le cluster Kubernetes à la logique du fournisseur cloud. C'est une surcouche qui n'est pas toujours présente (notamment dans le cas d'une installation dite on-premise\footnote{Une installation on-premise est une installation réalisée de A à Z sans passer par un fournisseur. L'entreprise installe toutes les briques nécessaires une par une et en assure la gestion par ses propres moyens.}). Il permet notamment au fournisseur cloud d'ajouter des routes dans le cluster (à la manière d'un reverse proxy). Il ajoute également un volume-controller afin de pouvoir créer des Volumes \footnote{Un volume est un espace de stockage, indépendant du conteneur, ce qui permet de persister des données et de les récupérer même si le conteneur vient à être tuer.} et interagir avec le fournisseur cloud pour les orchestrer.
 
 \paragraph*{Le kube-scheduler}
 Le kube-scheduler est le composant du master node qui est responsable de la surveillance des Pods qui viennent d'être créés. En effet, Kubernetes autorise les utilisateurs à lancer sur le cluster des conteneurs. Le kube-scheduler choisi automatiquement quel(s) node(s) va accueillir le ou les conteneurs nouvellement créé(s). Le scheduler détecte les Pods qui ne sont pas affectés, et il les associe à des nodes par le biais de l'api-server, en fonction des besoins et des ressources disponibles.
@@ -804,7 +805,7 @@ Le kube-scheduler est le composant du master node qui est responsable de la surv
 \subsection*{Les composants du Node}
 Chaque composant que nous allons voir ici, est exécuté sur chaque node. Ils maintiennent les Pods en vie et fournissent l'environnement d'exécution Kubernetes. Les nodes sont parfois aussi appelés worker-nodes.
 
-\paragraph*{Le Kubelet}
+\paragraph*{Le kubelet}
 Le kubelet est le principal composant qui s'exécute sur chaque node. Il peut enregistrer le node auprès de l'api-server en utilisant l'un des éléments suivants : le nom d'hôte, un flag\footnote{Une annotation servant d'identifiant} pour remplacer le nom d'hôte ou une logique spécifique pour un fournisseur de services cloud.\\
 
 Le kubelet fonctionne en termes de PodSpec. Un PodSpec est un objet (un contrat) Kubernetes qui décrit un Pod. Le kubelet prend un ensemble de PodSpecs qui sont fournis par divers mécanismes (principalement par l'api-server) et s'assure que les conteneurs décrits dans ces PodSpecs fonctionnent et sont en bonne santé.
@@ -830,34 +831,34 @@ En résumé, on peut schématiser un cluster Kubernetes de la manière suivante 
 \begin{interrupt}
 \paragraph{Conclusion:}
 Un cluster Kubernetes fonctionne de la manière suivante :
-sur chaque noeud, on retrouve le kubelet et le kube-proxy qui sont chargé du déploiement, de la surveillance, et de la mise en réseau des conteneurs. Le kubelet communique avec l'api-server afin de communiquer l'état de ses conteneurs que l'API va stocker dans l'Etcd.\newline
+sur chaque noeud, on retrouve le kubelet et le kube-proxy qui sont chargés du déploiement, de la surveillance et de la mise en réseau des conteneurs. Le kubelet communique avec l'api-server afin de communiquer l'état de ses conteneurs que l'API va stocker dans l'etcd.\newline
 
-L'api Server reçoit les requêtes, elle vérifie les commandes envoyées à l'aide du controller manager, elle enregistre les actions dans l'etcd et le kube-scheduler va répartir les déploiements sur les différents nodes.
+L'api-server reçoit les requêtes, elle vérifie les commandes envoyées à l'aide du controller manager, elle enregistre les actions dans l'etcd. Puis, le kube-scheduler va répartir les déploiements sur les différents nodes.
 \end{interrupt}
 
 \section*{Architecture d'un cluster Mesos/Marathon}
-Tout d'abord, il faut savoir qu'il est impossible d'utiliser l'orchestrateur de conteneur Marathon, sans posséder au préalable un cluster Mesos. Nous allons ici expliquer comment un cluster Mesos fonctionne et comment Marathon s'articule autour de cette architecture.
+Tout d'abord, il faut savoir qu'il est impossible d'utiliser l'orchestrateur de conteneurs Marathon, sans posséder au préalable un cluster Mesos. Nous allons ici expliquer comment un cluster Mesos fonctionne et comment Marathon s'articule autour de cette architecture.
 
 
 
 % control plane c'est du mesos ou kubernetes ??
 % - v2 : L'équivalent du control plane est le master node pour un cluster Mesos.
 \subsection*{Les composants du control plane}
-Dans le cadre d'un cluster Mesos le master node est aussi appelé control-plane. Il abrite deux entitées, le Mesos master et les Mesos frameworks.
+Dans le cadre d'un cluster Mesos, le master node est aussi appelé control-plane. Il abrite deux entités, le Mesos master et les Mesos frameworks.
 \paragraph*{Le Mesos master}
 Le Mesos master est le cœur du cluster. Il garantit la haute disponibilité du cluster. Il héberge l'interface utilisateur qui fournit des informations sur les ressources disponibles dans le cluster. L'API Mesos est accessible par ligne de commande ou directement par requête HTTP. Le Mesos master est la source centrale de toutes les tâches en cours, il est la source de vérité dans le cluster. Il stocke en mémoire toutes les données relatives aux tâches, à l'état du cluster. Pour une tâche, il ne stocke que les informations nécessaires, ce qui permet au master de fournir à l'interface utilisateur les données relatives aux tâches avec une latence minimale. C'est le master qui alloue les ressources aux différents frameworks Mesos.
 
 \paragraph*{Les schedulers}
-Le scheduler est en fait un des deux composants des Framework Mesos. Le framework Mesos est composé de deux éléments : le scheduler et l'executor. Le premier étant situé dans le control plane et le deuxième dans les Mesos agents (équivalent des worker-nodes) rattachés à ce framework\footnote{Mesos permet d'assigner, ou non, des worker-nodes à un seul framework uniquement}. On s'intéresse ici uniquement au scheduler. \\
+Le scheduler est en fait un des deux composants des frameworks Mesos. Le framework Mesos est composé de deux éléments : le scheduler et l'executor. Le premier étant situé dans le control plane et le deuxième dans les Mesos agents (équivalent des worker-nodes) rattachés à ce framework\footnote{Mesos permet d'assigner, ou non, des worker-nodes à un seul framework uniquement.}. On s'intéresse ici uniquement au scheduler. \\
 
-Lorsqu'il est déployé, le scheduler s'enregistre auprès du master Mesos et obtient un identifiant. A chaque requête reçue par le Mesos master, ce dernier délègue la requête au bon scheduler. Lorsque le scheduleur reçoit la requête, il évalue si il peut satisfaire la demande (par exemple déployer une application) en fonction des ressources que le Mesos master met à sa disposition. Il est également responsable de la gestion des échecs et des erreurs des tâches qu'il doit gérer. \\
+Lorsqu'il est déployé, le scheduler s'enregistre auprès du master Mesos et obtient un identifiant. A chaque requête reçue par le Mesos master, ce dernier délègue la requête au bon scheduler. Lorsque le scheduler reçoit la requête, il évalue si il peut satisfaire la demande (par exemple déployer une application) en fonction des ressources que le Mesos master met à sa disposition. Il est également responsable de la gestion des échecs et des erreurs des tâches qu'il doit gérer. \\
 \paragraph*{Marathon}
-Marathon est un des scheduler qui peut être déployé dans Mesos. Marathon est même un des piliers de l'architecture des clusters Apache Mesos. Utilisé en production pour l'orchestration de conteneurs, Marathon fournit une API REST pour le démarrage, l'arrêt et la mise à l'échelle des applications. Écrit en Scala, Marathon peut fonctionner en mode haute disponibilité en exécutant plusieurs copies de lui même. L'état des tâches en cours d'exécution est stocké dans la base de données du Mesos master.\\
+Marathon est un des scheduler qui peut être déployé dans Mesos. Marathon est même un des piliers de l'architecture des clusters Apache Mesos. Utilisé en production pour l'orchestration de conteneurs, Marathon fournit une API REST pour le démarrage, l'arrêt et la mise à l'échelle des applications. Écrit en Scala, Marathon peut fonctionner en mode haute disponibilité en exécutant plusieurs copies de lui-même. L'état des tâches en cours d'exécution est stocké dans la base de données du Mesos master.\\
 
-Marathon est en fait un méta-scheduler, ce qui signifie qu'il peut démarrer d'autres schedulers Mesos tels que Chronos ou Storm. Marathon en tant qu'orchestrateur de conteneur va s'assurer qu'ils survivent aux pannes de machine. Il peut lancer tout ce qui peut être lancé dans un shell standard. (On peut même lancer une autre instance de Marathon via Marathon.)
+Marathon est en fait un méta-scheduler, ce qui signifie qu'il peut démarrer d'autres schedulers Mesos tels que Chronos ou Storm. Marathon, en tant qu'orchestrateur de conteneurs, va s'assurer qu'ils survivent aux pannes de machine. Il peut lancer tout ce qui peut être lancé dans un shell standard. (On peut même lancer une autre instance de Marathon via Marathon.)
 
 \subsection*{Les composants du Mesos agent}
-Un cluster Mesos est composé de plusieurs Mesos agent, ce sont les équivalent des workers nodes. L'ensemble des tâches va donc s'éxécuter sur ces machines. Sur chaque Mesos agent on retrouve trois composants : le ou les schedulers locaux ainsi que leur executor associé et un processus appelé Mesos agent. Le Mesos agent fournit au Mesos master les informations relatives à l'hôte dans lequel il s'exécute (y compris les données sur les tâches en cours, les ressources disponibles de l'hôte qui lui sont allouées et d'autres métadonnées).
+Un cluster Mesos est composé de plusieurs Mesos agents, ce sont les équivalent des workers nodes. L'ensemble des tâches va donc s'exécuter sur ces machines. Sur chaque Mesos agent, on retrouve trois composants : le ou les schedulers locaux, leur executor associé et un processus appelé Mesos agent. Le Mesos agent fournit au Mesos master les informations relatives à l'hôte dans lequel il s'exécute (y compris les données sur les tâches en cours, les ressources disponibles de l'hôte qui lui sont allouées et d'autres métadonnées).
 
 \paragraph*{Le scheduler local}
 Le scheduler local communique avec le Mesos agent pour lui fournir l'état des tâches dont il a la responsabilité (l'état des applications pour Marathon par exemple). Si l'état des tâches ne correspond pas à celui attendu, il va communiquer les informations nécessaires à l'executor pour tendre vers le bon état.
@@ -880,7 +881,7 @@ L'executor exécute la tâche demandée par le scheduler (relayée par le schedu
 \label{A}
 \vspace{-2cm}
 \section*{Marathon: le endpoint /v2/deployments}
-Il faut savoir que un déploiement dans Marathon ce fait par l'intermédiaire d'un fichier JSON décrivant l'état souhaité du déploiement. Nous allons partir de l'exemple ci dessus qui permet de déployer dans Marathon un vs-code permettant de faire du python.
+Il faut savoir que un déploiement dans Marathon se fait par l'intermédiaire d'un fichier JSON décrivant l'état souhaité du déploiement. Nous allons partir de l'exemple ci-dessous qui permet de déployer dans Marathon un VScode permettant de faire du Python.
 \usemintedstyle{friendly}
 \begin{minted}[mathescape,
                linenos,
@@ -931,21 +932,21 @@ Il faut savoir que un déploiement dans Marathon ce fait par l'intermédiaire d'
   }
 
 \end{minted}
-Si on découpe le contrat ci dessus on a les parties suivantes : 
+Si on découpe le contrat ci-dessus on a les parties suivantes : 
 \begin{itemize}
-    \item id : l'id corresponds au dossier (virtuel) auquel va être rattaché le conteneur. Cela permet d'isoler les ressources entre utilisateur.
-    \item container : Ici on déclare l'image que l'on va vouloir déployer
-    \item env : Cette balise permet d'ajouter des variables d'environnement directement disponible au sein du conteneur. Ici on injecte la conf git de l'utilisateur   
-    \item labels : Dans Marathon, la configuration du reverse proxy se fait par l'intermédiaire des labels. Il a été choisit d'utiliser HA\_PROXY comme reverse-proxy. Ce dernier scanne l'ensemble des déploiements dans Marathon en continue. Lorsqu'il trouve l'annotation HAPROXY\_0\_VHOST il sait qu'il va devoir exposer ce déploiement, il ajoute alors ce conteneur à sa table de déploiement ce qui lui permettra de faire le lien entre l'url demandé et le service correspondant lorsqu'une requête demandant l'accès a ce service arrivera.   
-    \item instance: le nombre de réplique l'on veut du service.
-    \item fetch: cette partie indique a Marathon d'aller télécharger le fichier correspondant et de l'ajouter à la mesos-sandbox (un espace de stockage accessible à ce conteneur).
+    \item id : L'id correspond au dossier (virtuel) auquel va être rattaché le conteneur. Cela permet d'isoler les ressources entre utilisateurs.
+    \item container : Dans cette partie, on déclare l'image que l'on va vouloir déployer.
+    \item env : Cette balise permet d'ajouter des variables d'environnement directement disponibles au sein du conteneur. Dans cet exemple, on y injecte un mot de passe pour protéger le service.   
+    \item labels : Dans Marathon, la configuration du reverse proxy se fait par l'intermédiaire des labels. Il a été choisi d'utiliser HA\_PROXY comme reverse proxy. HA\_PROXY scanne l'ensemble des déploiements dans Marathon en continu. Lorsqu'il trouve l'annotation HAPROXY\_0\_VHOST, il sait qu'il va devoir exposer ce déploiement. Il ajoute alors ce conteneur à sa table de déploiement, ce qui lui permettra de faire le lien entre l'URL demandée et le service correspondant lorsqu'une requête demandant l'accès à ce service arrivera.   
+    \item instance: Instance permet de déclarer le nombre de répliques du service que l'on veut.
+    \item fetch: Cette partie indique à Marathon d'aller télécharger le fichier correspondant et de l'ajouter à la mesos-sandbox (un espace de stockage accessible à ce conteneur).
 \end{itemize}
 \section*{Kubernetes : le trio ingress.yaml, service.yaml, deploiement.yaml}
 
-Tout d'abord,il faut savoir que les déploiements Kubernetes sont, en général, configurés dans des fichiers .yaml (équivalent de JSON). Pour ce Hello world, nous allons également tenter de déployer un vscode. Nous allons avoir besoin de 3 fichiers (on peut néanmoins les regrouper en 1 seul fichier mais pour plus de lisibilité nous les séparerons) 
+Tout d'abord, il faut savoir que les déploiements Kubernetes sont, en général, configurés dans des fichiers .yaml (équivalent de JSON). Pour ce premier déploiement, nous allons également tenter de déployer un VScode. Nous allons avoir besoin de trois fichiers (on peut néanmoins les regrouper en un seul fichier, mais pour plus de lisibilité nous les séparerons). 
 
 \subsection*{Deployment.yaml}
-Un deployment correspond à l'orchestration de Pods. Le deployment s'assure que l'application tourne bien, avec un nombre d'instances correspondant au nombre demandé. Si l'on regarde le fichier deployment.yaml : 
+Un objet deployment gère l'orchestration de Pods. Le deployment s'assure que l'application tourne bien, avec un nombre d'instances correspondant au nombre demandé.
 \usemintedstyle{friendly}
 \begin{minted}[mathescape,
                linenos,
@@ -997,17 +998,17 @@ Un deployment correspond à l'orchestration de Pods. Le deployment s'assure que 
               name: vs-code-data
 \end{minted}
 
-On retrouve les informations intéressantes suivantes: 
+Si l'on regarde le fichier deployment.yaml ci-dessus, on retrouve les informations intéressantes suivantes : 
 \begin{itemize}
-    \item le champ replicas qui corresponds au nombre de conteneurs que l'on va lancer dans le cluster. On parle alors de scalabilité horizontale. 
-    \item le champ image qui corresponds à l'image docker que nous allons déployer dans Kubernetes.
-    \item le champs env qui va nous permettre de passer des variables d'environnement au conteneur.
-    \item le champs volume permet de déclarer un volume et le type de ce dernier. Ce volume sera ensuite attaché au conteneur avec l'entrée volumemounts.
-    \item le champs init container. Un init container est un conteneur qui s'executent avant notre déploiement afin de réaliser une certaine tache. Ici on va récuperer le fichier avec un wget et on le place dans un repertoire qui sera commun avec le conteneur que l'on veut déployer. Un init container pourrait très bien servir à requêter une API, ou à faire des tests sur l'existence d'un autre conteneur avant de démarrer.
-    \item les autres champs sont essentiellement des champs qui serviront a Kubernetes comme identifiant.\\
+    \item le champ "replicas" correspond au nombre de conteneurs que l'on va lancer dans le cluster. On parle alors de scalabilité horizontale. 
+    \item le champ "image" correspond à l'image Docker que nous allons déployer dans Kubernetes.
+    \item le champ "env" va nous permettre de passer des variables d'environnement au conteneur.
+    \item le champ "volumes" permet de déclarer un volume et le type de ce dernier. Ce volume sera ensuite attaché au conteneur avec l'entrée volumemounts.
+    \item le champ "initContainers" contient des conteneurs qui s'exécutent avant notre déploiement afin de réaliser une tâche. Dans cet exemple, on va récupérer le fichier avec un wget et on le place dans un répertoire qui sera commun avec le conteneur que l'on veut déployer. Un init container pourrait très bien servir à requêter une API ou à faire des tests sur l'existence d'un autre conteneur avant de démarrer.
+    \item les autres champs sont essentiellement des champs qui serviront à Kubernetes comme identifiant.\\
 \end{itemize}
 
-Envoyons à Kubernetes le fichier que l'on vient de créer, pour cela nous utiliserons la ligne de commande kubectl:
+Pour envoyer à Kubernetes le fichier que l'on vient de créer, nous utiliserons la ligne de commande kubectl :
 \usemintedstyle{friendly}
 \begin{minted}[mathescape,
                linenos,
@@ -1017,9 +1018,9 @@ Envoyons à Kubernetes le fichier que l'on vient de créer, pour cela nous utili
                framesep=2mm]{shell}
                kubectl apply -f nomDuFichier.yaml
 \end{minted}
-Kubectl est la ligne de commande qui nous permet de communiquer avec le cluster Kubernetes. Cette cli transforme l'ensemble des commandes en requêtes http qu'elle envoie sur les bons endpoints\newline
+Kubectl est la ligne de commande qui nous permet de communiquer avec le cluster Kubernetes. Cette CLI transforme l'ensemble des commandes en requêtes HTTP qu'elle envoie sur les bons endpoints.\newline
 
-Notre Pod est désormais deployé, mais il tourne dans le cluster mais impossible d'accéder à ce déploiement. 
+Notre Pod est désormais deployé, il tourne dans le cluster mais il est impossible d'accéder à ce déploiement.
 \subsection*{Service.yaml}
 Chaque Pod possède une adresse IP qui lui est propre, on pourrait donc imaginer donné accès a cette adresse ip aux utilisateurs. Mais lorsqu'on diffuse une application, on expose un service qui sera rendu par un ou plusieurs Pod, donner l'ip du Pod aux utilisateurs n'est donc pas le meilleur moyen. De plus, tous les clients de l'application (en particulier les autres microservices du cluster) n'ont pas à savoir où sont les Pods précisemment. \\
 
