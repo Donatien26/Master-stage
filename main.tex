@@ -287,6 +287,21 @@ Ces frameworks possédent deux composants : les schedulers et les executors\foot
 
 Enfin, en pratique on s'aperçoit qu'un cluster Kubernetes peut gérer jusqu'à 5000 nodes, alors qu'un cluster Mesos peut gérer jusqu'à 10 000 Mesos Agents.
 
+\subsection{Quels besoins de sécurité ?}
+Dans le cadre d'une architecture conteneurisée, il faut également mettre en place des mécanismes de sécurité. Pour la plateforme innovation, deux critères sont importants à vérifier : la disponibilité et la traçabilité. La confidentialité et l'intégrité ne sont pour le moment pas du tout garanties. En effet, cette plateforme reste tout de même une plateforme de "tests".\\
+
+La disponibilité de la plateforme de l’innovation est un sujet très important. En effet, chaque jour plusieurs dizaines de services à la demande et d’environnements de tests sont créés. Si l’orchestrateur qui gère l’ensemble de ces tâches venait à tomber, c’est plusieurs centaines de personnes qui seraient donc pénalisées. La disponibilité des services est donc primordiale. Pour garantir une disponibilité optimale, il faut tout d’abord pouvoir identifier les risques pouvant la réduire : perte de node, redémarrage d’un conteneur, manque de ressources, etc. \\
+
+Afin de se prémunir de certains problèmes, il est important de disposer d’outils de surveillance au sein du cluster. En plus des outils natifs proposé par DC/OS ou par Kubernetes (les différents dashboards), on retrouve des outils externes disponibles sur les deux orchestrateurs.\\
+
+Les deux orchestrateurs permettent de déployer facilement les outils Prometheus et Grafana. Ces outils vont permettre d'agréger l'ensemble des métriques disponibles dans le cluster au même endroit. \\
+
+Ces même outils permettent de réaliser de la traçabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Le traçage permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement.\\
+
+Hormis les outils de monitoring tels que les dashboards ou Prometheus et Grafana, il existe des outils (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émises par l’utilisateur. La CNCF recommande l’utilisation de l’outil Jaeger afin de réaliser du traçage au sein d’une architecture conteneurisée.\\
+
+L'annexe \ref{securite} propose des informations complémentaires sur les sources de failles de sécurité dans un cluster, un zoom sur le fonctionnement de Prometheus-Grafana et quelques propositions de pratiques plus ou moins simples à mettre en place afin de garantir une sécurité optimale. 
+
 \section{Déployer une application : deux approches différentes}
 Nous ne présenterons pas ici le code nécéssaire pour le déploiement d'une application (le code de déploiement d'une application dans l'un ou l'autre orchestrateur est présent en annexe \ref{A}), mais les différences entre les deux approches.
 \paragraph{Marathon}
@@ -369,6 +384,8 @@ Par ailleurs, Helm est le gestionnaire de paquets recommandé par la Cloud Nativ
 
 
 
+
+
 \chapterimage{chapter-image/git-01.jpg} 
 \chapter{CI/CD: Kubernetes un pas vers le GitOps}
 \vspace{-2cm}
@@ -423,7 +440,7 @@ Dans le cadre du modèle en pull, un opérateur surveille en continue le répert
     \item Le répertoire Git contient l'historique des modifications. Cela permet de voir comment l'infrastructure a évolué. Les messages de commits s'ajoutent à la documentation déjà existante. De plus, cela permet de voir le déploiement comme du code. On peut donc désormais pratiquer les techniques de "pair programming"\footnote{Le pair programming est une technique de développement logiciel agile dans laquelle deux programmeurs travaillent ensemble sur un même poste de travail. L'un, le driver, écrit le code tandis que l'autre, l'observateur, examine chaque ligne de code au fur et à mesure qu'elle est tapée. Les deux programmeurs changent fréquemment de rôle
 } ou d'"extreme programming"\footnote{Méthode de développement d'application consistant à développer une application par sprint très court.} qui ne peuvent être que bénéfiques. En effet, ces pratiques apportent beaucoup sur la qualité de code et de partage de connaissances sur le projet.
     % \item Les tickets kanboard \footnote{Dans le développement de logiciel, un système Kanban  est utilisé afin de limiter les tâches-en-cours. Ce système s'appuie sur les tickets kanboard. Un ticket Kanboard représente une tache à effectuer.} n'ont plus de raison d'être et sont remplacés par des merges request. La merge request explique les besoins et le propriétaire du dépôt vérifie la validité de la merge request et l'accepte (ou non). On a donc deux avantages :  une réduction des erreurs humaines et un partage de connaissances.
-    \item La mise en production d'une application se déroule comme le reste du code. Une nouvelle version d'une application à déployer passe par la demande d'une merge request. La merge request explique les besoins et le propriétaire du dépôt vérifie la validité de la merge request et l'accepte (ou non). S’il y a des points à revoir, ils seront documentés et expliqués dans la merge request. L’approbation de la merge request devient la validation des modifications.
+    \item La mise en production d'une application se déroule comme le reste du code. Une nouvelle version d'une application à déployer passe par la création d'une demande de fusion (merge request). La merge request explique les besoins et le propriétaire du dépôt vérifie la validité de la merge request et l'accepte (ou non). S’il y a des points à revoir, ils seront documentés et expliqués dans la merge request. L’approbation de la merge request devient la validation des modifications.
     \item Revenir en arrière suite à un déploiement, revient simplement à annuler la dernière fusion (faire un git revert sur le dernier commit).
     \item Comme tous les changements passent par Git, les modifications sont auditables. De plus, avec le  modèle en pull, seul l’opérateur a le droit de déployer dans le cluster. Il n'y a donc plus besoin de stocker les identifiants du cluster dans GitLab pour le CI. On a donc moins d'identifiants d'accès au cluster stockés à divers endroits, on limite ainsi les problèmes de sécurité.
 \end{itemize}
@@ -680,7 +697,7 @@ Les admissions-controller parcourent l'ensemble de l'objet configuration et y aj
 \paragraph{Remarques:}
  Dans le cas de Helm, nous n'avons pas d'admission-controller qui injecte un id de service et/ou l'idep de la personne dans le nom du service, car ces derniers s'injectent au moment de l'exécution de la commande Helm par le biais des options. Helm permet l'injection du namespace et la génération d'un identifiant aléatoire. \\
  
- Toujours dans le cas de Helm, la détermination du namespace de l'utilisateur entraîne sa création par Onyxia si ce dernier n'existe pas.
+ Toujours dans le cas de Helm, un admission-controller est en charge de la détermination du namespace de l'utilisateur et de sa création par Onyxia si ce dernier n'existe pas.
 \end{interrupt}
 Ensuite, dans le cas de Universe, le template du service est rempli (fichier mustache) à l'aide de l'objet contenant la configuration. Une fois cette opération réalisée, on a un fichier marathon.json classique rempli à l'aide des valeurs précédentes. Si il s'agit d'un lancement de type simulation, alors on renvoie à l'utilisateur ce fichier, sinon on envoie ce fichier directement à Marathon par l'intermédiaire d'une requête POST.\\
 
@@ -714,20 +731,7 @@ Pour Helm, chaque requête sur Onyxia-API pour lister les services d'un utilisat
 
 Par ailleurs, le comportement de Kubernetes n'est pas le même que Marathon lorsqu'on stoppe un service. En effet, Marathon distingue un service arrêté d'un service supprimé, ce n'est pas le cas de Kubernetes. Un service Helm que l'on arrêtera sera perdu (il faudra repasser par l'étape de création pour en avoir un nouveau). Alors qu'un service Universe déployé dans Marathon pourra être redémarré.
 
-\section{Quels besoins de sécurité ?}
-Dans le cadre d'une architecture conteneurisée, il faut également mettre en place des mécanismes de sécurité. Pour la plateforme innovation, deux critères sont importants à vérifier : la disponibilité et le traçage. La confidentialité et l'intégrité ne sont pour le moment pas du tout garanties. En effet, cette plateforme reste tout de même une plateforme de "tests".\\
 
-La disponibilité de la plateforme de l’innovation est un sujet très important. En effet, chaque jour plusieurs dizaines de services à la demande et d’environnements de tests sont créés. Si l’orchestrateur qui gère l’ensemble de ces tâches venait à tomber, c’est plusieurs centaines de personnes qui seraient donc pénalisées. La disponibilité des services est donc primordiale. Pour garantir une disponibilité optimale, il faut tout d’abord pouvoir identifier les risques pouvant la réduire : perte de node, redémarrage d’un conteneur, manque de ressources, etc. \\
-
-Afin de se prémunir de certains problèmes, il est important de disposer d’outils de surveillance au sein du cluster. En plus des outils natifs proposé par DC/OS ou par Kubernetes (les différents dashboards), on retrouve des outils externes disponibles sur les deux orchestrateurs.\\
-
-Les deux orchestrateurs permettent de déployer facilement les outils Prometheus et Grafana. Ces outils vont permettre d'agréger l'ensemble des métriques disponibles dans le cluster au même endroit. \\
-
-Ces même outils permettent de réaliser de la traçabilité. Il est important de pouvoir suivre le parcours d'un utilisateur. Le traçage permet de visualiser les requêtes et de construire une vue de l’ensemble de la chaîne des appels effectués, des demandes des utilisateurs aux interactions entre des centaines de services. Il permet également d’évaluer la latence des applications (le temps de réponse à chaque demande), de suivre le cycle de vie des appels sur le réseau (HTTP, RPC, etc.) et d’identifier les problèmes de performances en obtenant une visibilité sur les goulets d’étranglement.\\
-
-Hormis les outils de monitoring tels que les dashboards ou Prometheus et Grafana, il existe des outils (dont le déploiement est nettement facilité pour Kubernetes) qui permettent de suivre le parcours des requêtes émises par l’utilisateur. La CNCF recommande l’utilisation de l’outil Jaeger afin de réaliser du traçage au sein d’une architecture conteneurisée.\\
-
-L'annexe \ref{securite} propose des informations complémentaires sur les sources de failles de sécurité dans un cluster, un zoom sur le fonctionnement de Prometheus-Grafana et quelques propositions de pratiques plus ou moins simples à mettre en place afin de garantir une sécurité optimale. 
 
 
 
@@ -1018,7 +1022,7 @@ Pour envoyer à Kubernetes le fichier que l'on vient de créer, nous utiliserons
                framesep=2mm]{shell}
                kubectl apply -f nomDuFichier.yaml
 \end{minted}
-Kubectl est la ligne de commande qui nous permet de communiquer avec le cluster Kubernetes. Cette CLI transforme l'ensemble des commandes en requêtes HTTP qu'elle envoie sur les bons endpoints.\newline
+Kubectl est la ligne de commande qui nous permet de communiquer avec le cluster Kubernetes. Cette CLI transforme l'ensemble des commandes en requêtes HTTP qu'elle envoie sur les bons endpoints de l'api-server.\newline
 
 Notre Pod est désormais deployé, il tourne dans le cluster mais il est impossible d'accéder à ce déploiement.
 \subsection*{Service.yaml}
@@ -1154,13 +1158,13 @@ Le catalogue Universe proposé par DC/OS contient environ 120 paquets que l'on p
 \vspace{-2cm}
 Helm est un projet opensource créé en 2015. C'est le gestionnaire de paquets recommandé par la CNCF (Cloud Native Computing Foundation) pour l'univers Kubernetes. C'est un projet implémenter en Go\footnote{Go est un langage de programmation compilé et concurrent inspiré de C et Pascal. Ce langage a été développé par Google.} (comme de nombreux projets qui gravitent autour de Kubernetes).\\
 
-Helm est un SDK (Software Development Kit, un ensemble d’outils d’aide à la programmation) qui se découpe en 2 parties: 
+Helm est un SDK (Software Development Kit, un ensemble d’outils d’aide à la programmation). Il respecte l'architecture client-only\footnote{L'ensemble du travail est fait sur le poste de l'utilisateur avant d'être généralement envoyé à une API.}. Helm se découpe en 2 parties:
 \begin{itemize}
     \item Le client Helm est une ligne de commande pour l'utilisateur. La ligne de commande permet d'installer ou désinstaller des applications, d'installer automatiquement des dépendances applicatives, de mettre à jour des applications, de configurer des déploiements d'application, de récupérer des paquets d'application dans des dépôts, et enfin de communiquer avec la librairie Helm.
-    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des Charts pour créer des releases. C'est également elle qui implémente la logique de montée de version (rolling-update) ou de désinstallation des releases.
+    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des Charts pour créer des releases. C'est également elle qui implémente la logique de montée de version (rolling-update) ou de désinstallation des releases.\\
 \end{itemize}
 
-Helm s'accompagne de 3 concepts : les Charts, la config et la release. Nous allons parcourir ces différentes notions.
+Helm interagit directement avec l'api-server de Kubernetes. Les permissions sont basées sur le fichier de configuration de Kubernetes. On peut donc facilement limiter les permissions des utilisateurs. Helm s'accompagne de 3 concepts : les Charts, la config et la release. Nous allons parcourir ces différentes notions.
 
 \subsubsection{Charts}
 Les paquets Helm sont appelés des Charts et sont composés de plusieurs fichiers de configurations yaml (qui sont principalement des templates) et qui seront convertis en fichiers yaml compréhensible par Kubernetes grâce à la librairie Helm. La structure d'un Chart est la suivante :
@@ -1192,7 +1196,7 @@ Helm permet de surcharger la configuration par défaut fourni avec un Chart. Cet
     \item Par le biais d'un fichier values.yaml: l'utilisateur crée un fichier contenant les valeurs qu'il souhaite surcharger par rapport à la configuration par défaut.
     Il lui suffit alors de le préciser lors de l'installation du Chart \textit{Helm install chart mychart -f my-values.yaml}
     \item L'utilisateur peut également surcharger les valeurs de déploiement directement depuis la ligne de commande. On aurait donc (pour le même exemple que ci dessus) \textit{Helm install chart mychart --set ingress.enabled=true}.
-    \item Enfin on peut également combiner les deux. \textit{Helm install chart mychart -f my-values.yaml --set ingress.enabled=true}.
+    \item Enfin on peut également combiner les deux. \textit{Helm install chart mychart -f my-values.yaml --set ingress.enabled=true}.\\
 \end{itemize}
 
 Lorsque un Chart est installé dans le cluster, on parle alors de release. Une release est une instance d'un Chart exécuté dans un cluster Kubernetes. Un Chart peut souvent être installé plusieurs fois dans le même cluster. Et chaque fois qu'il est installé, une nouvelle release est créée.
@@ -1379,7 +1383,7 @@ Kubernetes (par rapport a Marathon) permet, par l'intermédiaire d'OPA (open pol
 \chapterimage{chapter-image/autre-01.jpg} 
 \chapter{Interfaçage avec le cloud }
 \vspace{-2cm}
-Dans cette parties nous aborderons divers points qui différencient Kubernetes et Marathon de DC/OS. Nous aborderons notamment la partie interfaçage avec le cloud.
+Dans cette partie nous aborderons divers points qui différencient Kubernetes et Marathon de DC/OS. Nous aborderons notamment la partie interfaçage avec le cloud.
 
 \section*{Interfaçage avec le cloud}
 Lorsqu'on choisit son orchestrateur de conteneur, on tient forcement compte de la facilité de déploiement de ce dernier. En effet, en général on veut que notre infrastructure soit déployable facilement, rapidement, et sans faire face à une très grande complexité de configuration.
