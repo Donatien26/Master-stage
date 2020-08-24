@@ -1058,10 +1058,16 @@ Les infos les plus importantes sont :
     \item port : le port sur le service (non utilisé dans ce tutoriel) mais il permet à un autre conteneur de venir interroger ce service.\\
 \end{itemize}
 
-Après exécution du service.yaml (avec kubectl apply), le service est bien en place. Notre VScode est maintenant accessible, mais uniquement depuis l'intérieur du cluster. (pour s'en convaincre \textit{kubectl get services} noter l'adresse IP, puis lancer  \textit{kubectl run -i --tty busybox --image=busybox --restart=Never -- sh } qui permet de lancer un déploiement en mode interactif et nous donne accès à son shell, exécuter ensuite curl adresse-ip:8080 notre service répond)
+Après exécution du service.yaml (avec kubectl apply), le service est bien en place. Notre VScode est maintenant accessible, mais uniquement depuis l'intérieur du cluster. \\
+
+Pour s'en convaincre, nous pouvons lister les services (\textit{kubectl get services}) et noter l'adresse IP de celui que l'on vient de créer. \\
+
+Lançons ensuite un conteneur en mode interactif (c'est-à-dire un conteneur dans lequel l'utilisateur va pouvoir accéder à un shell et y lancer des commandes)  ayant l'outil curl, pour cela il faut écrire : \textit{kubectl run -i --tty busybox --image=busybox --restart=Never -- sh }. \\
+
+Enfin si l'on écrit la ligne de commande suivante \textit{curl adresse-ip:80} notre service nous répond, le service est donc accessible depuis l'intérieur du cluster.
 
 \subsection*{Ingress.yaml}
-L'ingress est le fichier qui va nous permettre d'exposer notre service à l'extérieur du cluster. Un ingress correspond à un point d'entrée dans le cluster. Ça va nous permettre d'exposer notre service en dehors du cluster. C'est globalement équivalent au travail classique d'un reverse-proxy.
+L'ingress est le fichier qui va nous permettre d'exposer notre service à l'extérieur du cluster. Un ingress correspond à un point d'entrée dans le cluster. Ça va nous permettre d'exposer notre service en dehors du cluster. C'est globalement équivalent au travail classique d'un reverse proxy.
 
 \usemintedstyle{friendly}
 \begin{minted}[mathescape,
@@ -1092,7 +1098,7 @@ L'ingress est le fichier qui va nous permettre d'exposer notre service à l'ext�
 Quelques informations importantes :
 
 \begin{itemize}
-    \item \texttt{annotations: Kubernetes.io/ingress.class: nginx} : une indication pour indiquer le reverse-proxy à utiliser. Sur le cluster innovation, il s'agit de nginx (mais sur d'autres clusters, on pourrait trouver du traefik, du ha\_proxy...).
+    \item \texttt{annotations: Kubernetes.io/ingress.class: nginx} : une indication pour indiquer le reverse proxy à utiliser. Sur le cluster innovation, il s'agit de nginx (mais sur d'autres clusters, on pourrait trouver du traefik, du ha\_proxy...).
     \item \texttt{rules: - host: amodifier.portail.innovation.Insee.eu}: Le nom de domaine à utiliser pour accéder au service.
     \item \texttt{tls: - hosts: - amodifier.portail.innovation.insee.eu}: L'activation du TLS (le "S" de HTTPS) pour notre domaine. L'application sera automatiquement servie en HTTPS avec un certificat ajouté par le reverse proxy.\\
 \end{itemize}
@@ -1112,6 +1118,13 @@ Actuellement, l'application est capable de convertir un contrat Marathon contena
 
 Le but originel de ce projet était de pouvoir convertir un contrat Marathon en contrat Kubernetes à la volée dans Onyxia, afin de pouvoir migrer rapidement des déploiements Marathon vers Kubernetes dans le but de tester si le cluster Kubernetes interne supportait ou non la charge. Nous n'avons donc pas poussé l'implémentation plus loin. Cependant ce projet est utilisable en l'état.
 
+\begin{figure}[H]
+\hspace{-0.5cm}
+\renewcommand{\figurename}{Schéma}
+\includegraphics[scale=0.6,trim={0 0 0 0},clip ]{Pictures/Comparaison/deployer/marathontokub.png}
+\captionsetup{margin=1.5cm,format=hang,justification=justified}
+\caption[]{Fonctionnement simplifié de Marathon-to-Kub \newline}
+\end{figure}
 
 
 
@@ -1161,7 +1174,7 @@ Helm est un projet open source créé en 2015. C'est le gestionnaire de paquets 
 Helm est un SDK (Software Development Kit, un ensemble d’outils d’aide à la programmation). Il respecte l'architecture client-only\footnote{L'ensemble du travail est fait sur le poste de l'utilisateur avant d'être généralement envoyé à une API.}. Helm se découpe en deux parties:
 \begin{itemize}
     \item Le client Helm est une ligne de commande pour l'utilisateur. La ligne de commande permet d'installer ou désinstaller des applications, d'installer automatiquement des dépendances applicatives, de mettre à jour des applications, de configurer des déploiements d'application, de récupérer des paquets d'application dans des dépôts, et enfin de communiquer avec la librairie Helm.
-    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des Charts pour créer des releases. C'est également elle qui implémente la logique de montée de version (rolling update) ou de désinstallation des releases.\\
+    \item La librairie Helm fournit la logique pour exécuter les commandes Helm. C'est la partie de Helm qui s'interface avec l'api-server de Kubernetes et qui permet de combiner les templates et la configuration des Charts pour créer des releases\footnote{Version d'un chart déployé dans Kubernetes.}. C'est également elle qui implémente la logique de montée de version (rolling update) ou de désinstallation des releases.\\
 \end{itemize}
 
 Helm interagit directement avec l'api-server de Kubernetes. Les permissions sont basées sur le fichier de configuration de Kubernetes. On peut donc facilement limiter les permissions des utilisateurs. Helm s'accompagne de trois concepts : les Charts, la config et la release. Nous allons parcourir ces différentes notions.
@@ -1178,6 +1191,7 @@ Les paquets Helm sont appelés des Charts et sont composés de plusieurs fichier
       \item values.yaml : Un fichier YAML contenant les valeurs de configuration par défaut du Chart.\newline
 \end{itemize} 
 
+\vspace{-0.5cm}
 \begin{figure}[H]\centering
 \renewcommand{\figurename}{Capture d'écran}
 \includegraphics[scale=0.8]{Pictures/Comparaison/deployer/Kubernetes/helmChart.png}
@@ -1187,7 +1201,7 @@ Remarque : Ici on a que les fichiers par défaut, dans la réalité il peut y en
 \end{figure}
 
 
-
+% \vspace{-1cm}
 L'ensemble des Charts est ensuite placé dans un Helm repository. Un Helm repository est un site HTTP qui délivre un fichier index.yaml et des Charts packagés. Ces fichiers peuvent être servis par n'importe quel serveur WEB, service de stockage d'objets ou un hôte de site statique tel que les pages GitHub (par exemple : \url{https://inseefrlab.github.io/helm-charts-datascience/index.yaml}).
 
 \subsubsection{Config et Release}
@@ -1195,8 +1209,8 @@ Helm permet de surcharger la configuration par défaut fournie avec un Chart. Ce
 \begin{itemize}
     \item Par le biais d'un fichier values.yaml : l'utilisateur crée un fichier contenant les valeurs qu'il souhaite surcharger par rapport à la configuration par défaut.
     Il lui suffit alors de le préciser lors de l'installation du Chart avec la commande : \textit{Helm install chart mychart -f my-values.yaml}
-    \item L'utilisateur peut également surcharger les valeurs de déploiement directement depuis la ligne de commande. On aurait donc (pour le même exemple que ci-dessus) : \textit{Helm install chart mychart --set ingress.enabled=true}.
-    \item Enfin, on peut également combiner les deux en utilisant : \textit{Helm install chart mychart -f my-values.yaml --set ingress.enabled=true}.\\
+    \item L'utilisateur peut également surcharger les valeurs de déploiement directement depuis la ligne de commande. On aurait donc (pour le même exemple que ci-dessus) : \textit{helm install chart mychart --set ingress.enabled=true}.
+    \item Enfin, on peut également combiner les deux en utilisant : \textit{helm install chart mychart -f my-values.yaml --set ingress.enabled=true}.\\
 \end{itemize}
 
 Lorsque un Chart est installé dans le cluster, on parle alors de release. Une release est une instance d'un Chart exécuté dans un cluster Kubernetes. Un Chart peut souvent être installé plusieurs fois dans le même cluster. Et chaque fois qu'il est installé, une nouvelle release est créée.
@@ -1293,7 +1307,7 @@ De manière générale, la sécurité  a  pour  objectif  de réduire  les  risq
 
 Un orchestrateur de conteneurs permet d'optimiser des ressources en permettant l'exécution et l'ordonnancement des conteneurs sur un ensemble de machines. Sur chacune de ces machines, on trouve plusieurs couches : un OS (Windows, Linux, etc.) ainsi qu'un container runtime qui sera responsable de l'orchestration de nos conteneurs.\newline
 
-Si l'on étudie plus en détail la constitution d'un conteneur, on s'aperçoit que ce dernier est lui aussi composé de plusieurs couches : une base de système d'exploitation, une runtime layer (jvm, node JS, etc.) et enfin la couche de l'application.  On retrouve d'ailleurs ces différentes couches lorsque l'on écrit un Dockerfile (le fichier permettant de créer l'image d'un conteneur).
+Si l'on étudie plus en détails la constitution d'un conteneur, on s'aperçoit que ce dernier est lui aussi composé de plusieurs couches : une base de système d'exploitation, un environnement d’exécution  (jvm, node JS, etc.) et enfin la couche de l'application.  On retrouve d'ailleurs ces différentes couches lorsque l'on écrit un Dockerfile (le fichier permettant de créer l'image d'un conteneur). Ci-dessous se trouve un exemple de Dockerfile d'une application Java :
 \usemintedstyle{friendly}
 \begin{minted}[mathescape,
                linenos,
@@ -1315,11 +1329,13 @@ Si l'on étudie plus en détail la constitution d'un conteneur, on s'aperçoit q
     ENTRYPOINT ["java","-jar","/toto.jar"]
 \end{minted}
 
-Chacune des couches présentées peuvent potentiellement introduire une faille de sécurité. Par exemple, au niveau de l'infrastructure, tous les composants peuvent présenter des failles. Au niveau du Host OS, chaque distribution a ses failles de sécurité, et le container runtime n'est également pas épargné. Notre conteneur peut lui aussi présenter des failles. Au niveau de l'image de base qu'il utilise, en effet ces images dépendent généralement de d'autres images qui elles-mêmes vont dépendre de librairies de bases qui peuvent présenter des failles, il en va de même pour le runtime layer. Enfin, la dernière couche, l'application layer regroupe les failles applicatives, "créées" par le développeur. 
+Chacune des couches présentées peuvent potentiellement introduire une faille de sécurité. Par exemple, au niveau de l'infrastructure, tous les composants peuvent présenter des failles. Au niveau du système d'exploitation de l'hôte, chaque distribution a ses failles de sécurité. L'environnement d'exécution des conteneurs contient également des failles de sécurité.\\
+
+Notre conteneur peut lui aussi présenter des failles. Au niveau de l'image de base qu'il utilise, en effet ces images dépendent généralement de d'autres images qui elles-mêmes vont dépendre de librairies de bases qui peuvent présenter des failles. Il en va de même pour la partie amenant l'environnement d'exécution pour notre application (Java, Javascript, PHP,...). Enfin, la dernière couche, la couche applicative regroupe les failles applicatives, "créées" par le développeur. 
 
 \begin{figure}[H]\centering
-\renewcommand{\figurename}{Tableau}
-\includegraphics[scale=0.7]{Pictures/annexe/container-threat.PNG}
+\renewcommand{\figurename}{Figure}
+\includegraphics[scale=0.6]{Pictures/annexe/container-threat.png}
 \captionsetup{margin=1.5cm,format=hang,justification=justified}
 \caption[]{Exemples de menace sur chacune des couches intervenant dans un orchestrateur de conteneur. \newline
 Source: La sécurité avec Kubernetes et les conteneurs Docker : une histoire sans fin (A. Roman C. Dubois)}
